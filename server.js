@@ -44,7 +44,6 @@ function buildFallbackDeals() {
 async function getStonQuote(pairCfg) {
   try {
     const { StonApiClient } = require("@ston-fi/api");
-
     const apiClient = new StonApiClient();
 
     const offerUnits = BigInt(
@@ -72,18 +71,28 @@ async function getStonQuote(pairCfg) {
     const amountInHuman = Number(pairCfg.amountInBase);
     const price = formatPrice(amountOutHuman, amountInHuman);
 
-    if (!price) return null;
+    if (!price) {
+      return {
+        ok: false,
+        reason: "no-price",
+        raw: simulationResult
+      };
+    }
 
     return {
+      ok: true,
       dex: "STON",
       pair: pairCfg.pair,
       amountIn: amountInHuman,
       amountOut: +amountOutHuman.toFixed(6),
-      price
+      price,
+      raw: simulationResult
     };
   } catch (error) {
-    console.error("STON simulate error:", error.message);
-    return null;
+    return {
+      ok: false,
+      reason: error.message || "ston-simulate-error"
+    };
   }
 }
 
@@ -103,6 +112,25 @@ app.get("/api/check", (_req, res) => {
   });
 });
 
+app.get("/api/debug/ston", async (_req, res) => {
+  try {
+    const pairCfg = SWAP_CONFIG.pairs[0];
+    const ston = await getStonQuote(pairCfg);
+
+    return res.json({
+      ok: true,
+      source: "STON-DEBUG",
+      pair: pairCfg,
+      result: ston
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      error: error.message || "debug failed"
+    });
+  }
+});
+
 app.get("/api/scanner/live", async (_req, res) => {
   try {
     const deals = [];
@@ -111,7 +139,7 @@ app.get("/api/scanner/live", async (_req, res) => {
       const ston = await getStonQuote(pairCfg);
       const dedust = await getDedustQuotePlaceholder(pairCfg);
 
-      if (ston && dedust) {
+      if (ston?.ok && dedust) {
         let buyDex = "STON";
         let sellDex = "DeDust";
         let buyPrice = ston.price;
@@ -142,7 +170,7 @@ app.get("/api/scanner/live", async (_req, res) => {
             risk: netSpread > 1.5 ? "low" : netSpread > 0.7 ? "medium" : "high"
           });
         }
-      } else if (ston) {
+      } else if (ston?.ok) {
         deals.push({
           id: deals.length + 1,
           pair: pairCfg.pair,
