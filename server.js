@@ -507,3 +507,4 @@ app.get("/api/scanner/live2", async (_req, res) => {
 
 app.listen(PORT, () => {
   console.log("Server started on port", PORT);
+});
