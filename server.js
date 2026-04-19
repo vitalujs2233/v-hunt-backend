@@ -182,42 +182,51 @@ async function getStonQuote(pairCfg) {
 }
 
 async function getDedustQuote(pairCfg) {
-  try {
-    const TON = Asset.native();
-    const QUOTE = Asset.jetton(Address.parse(pairCfg.quoteAddress));
+try {
+const TON = Asset.native();
+const QUOTE = Asset.jetton(Address.parse(pairCfg.quoteAddress));
 
-    const pool = tonClient.open(
-      await dedustFactory.getPool(PoolType.VOLATILE, [TON, QUOTE])
-    );
+const pool = tonClient.open(
+await dedustFactory.getPool(PoolType.VOLATILE, [TON, QUOTE])
+);
 
-    const readiness = await pool.getReadinessStatus();
+const readiness = await pool.getReadinessStatus();
 
-    if (readiness !== ReadinessStatus.READY) {
-      return {
-        ok: false,
-        reason: "dedust-pool-not-ready",
-        debug: {
-          readiness: String(readiness)
-        }
-      };
-    }
-
-    return {
-      ok: true,
-      pair: pairCfg.pair,
-      debug: {
-        poolAddress: pool.address?.toString?.() || null,
-        readiness: String(readiness)
-      }
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      reason: error.message || "dedust-error"
-    };
-  }
+if (readiness !== ReadinessStatus.READY) {
+return {
+ok: false,
+reason: "dedust-pool-not-ready"
+};
 }
 
+const amountIn = BigInt(
+Math.floor(Number(pairCfg.amountInBase) * 10 ** pairCfg.baseDecimals)
+);
+
+const result = await pool.getEstimatedSwapOut({
+assetIn: TON,
+amountIn
+});
+
+const amountOut = Number(result) / 10 ** pairCfg.quoteDecimals;
+const price = formatPrice(amountOut, Number(pairCfg.amountInBase));
+
+return {
+ok: true,
+dex: "DeDust",
+pair: pairCfg.pair,
+amountIn: Number(pairCfg.amountInBase),
+amountOut: +amountOut.toFixed(6),
+price
+};
+
+} catch (error) {
+return {
+ok: false,
+reason: error.message || "dedust-error"
+};
+}
+}
 app.get("/", (_req, res) => {
   res.send("V-HUNT BACKEND WORKING");
 });
