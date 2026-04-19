@@ -109,8 +109,8 @@ async function getStonQuote(pairCfg) {
   }
 }
 
-// Здесь пока нет настоящего DeDust quote engine через pool contract.
-// Поэтому второй DEX временно не считаем через SDK, а готовим место под него.
+// Временный placeholder для DeDust.
+// Следующим шагом заменим на настоящий pool quote.
 async function getDedustQuotePlaceholder() {
   return null;
 }
