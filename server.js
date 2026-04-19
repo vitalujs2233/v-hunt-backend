@@ -84,14 +84,16 @@ async function getStonQuote(pairCfg) {
     const assets = await getStonAssets();
 
     const offerAddress =
-      String(pairCfg.baseSymbol).toUpperCase() === "TON"
+      pairCfg.baseAddress ||
+      (String(pairCfg.baseSymbol).toUpperCase() === "TON"
         ? "ton"
-        : findAssetAddressBySymbol(assets, pairCfg.baseSymbol);
+        : findAssetAddressBySymbol(assets, pairCfg.baseSymbol));
 
     const askAddress =
-      String(pairCfg.quoteSymbol).toUpperCase() === "TON"
+      pairCfg.quoteAddress ||
+      (String(pairCfg.quoteSymbol).toUpperCase() === "TON"
         ? "ton"
-        : findAssetAddressBySymbol(assets, pairCfg.quoteSymbol);
+        : findAssetAddressBySymbol(assets, pairCfg.quoteSymbol));
 
     if (!offerAddress || !askAddress) {
       return {
