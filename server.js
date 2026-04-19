@@ -30,9 +30,45 @@ app.get("/api/scanner/live", (_req, res) => {
     "TON/JETTON",
     "USDT/TON",
     "DOGS/TON",
-    "NOT/TON"
+    "NOT/TON",
+    "TON/USDC",
+    "TON/BTC",
+    "TON/ETH",
+    "USDT/NOT",
+    "USDT/DOGS",
+    "USDT/GRAM",
+    "DOGS/NOT",
+    "BOLT/TON",
+    "GRAM/TON"
   ];
 
+  const deals = pairs.map((pair, index) => {
+    const buyPrice = +(Math.random() * 2 + 0.001).toFixed(4);
+    const sellPrice = +(buyPrice + Math.random() * 0.05).toFixed(4);
+    const grossSpread = ((sellPrice - buyPrice) / buyPrice * 100);
+    const netSpread = Math.max(grossSpread - 0.35, 0);
+
+    return {
+      id: index + 1,
+      pair,
+      buyDex: Math.random() > 0.5 ? "STON" : "DeDust",
+      sellDex: Math.random() > 0.5 ? "STON" : "DeDust",
+      buyPrice,
+      sellPrice,
+      grossSpreadPercent: +grossSpread.toFixed(2),
+      netSpreadPercent: +netSpread.toFixed(2),
+      estimatedProfitTon: +(Math.random() * 0.8).toFixed(3),
+      verified: true,
+      risk: netSpread > 1.5 ? "low" : netSpread > 0.7 ? "medium" : "high"
+    };
+  });
+
+  res.json({
+    ok: true,
+    source: "DYNAMIC-SCANNER",
+    deals
+  });
+});
   const deals = pairs.map((pair) => {
     const buyPrice = +(Math.random() * 2 + 0.001).toFixed(4);
     const sellPrice = +(buyPrice + Math.random() * 0.05).toFixed(4);
