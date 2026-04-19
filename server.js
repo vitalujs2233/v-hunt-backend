@@ -1,5 +1,5 @@
-import express from "express";
-import cors from "cors";
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
 
@@ -8,13 +8,11 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
 
-// 🔥 ПРОСТОЙ ТЕСТ (чтобы убедиться что Railway работает)
-app.get("/", (req, res) => {
-  res.send("V-HUNT BACKEND WORKING 🚀");
+app.get("/", (_req, res) => {
+  res.send("V-HUNT BACKEND WORKING");
 });
 
-// 🔥 ТЕСТ API
-app.get("/api/check", (req, res) => {
+app.get("/api/check", (_req, res) => {
   res.json({
     ok: true,
     message: "Backend работает",
@@ -22,8 +20,7 @@ app.get("/api/check", (req, res) => {
   });
 });
 
-// 🔥 ПОКА ДАЕМ ПРОСТЫЕ ДАННЫЕ (НЕ mock из старого проекта!)
-app.get("/api/scanner/live", (req, res) => {
+app.get("/api/scanner/live", (_req, res) => {
   res.json({
     ok: true,
     source: "NEW-BACKEND",
