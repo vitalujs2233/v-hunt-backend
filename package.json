@@ -7,6 +7,11 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@ston-fi/api": "latest",
+    "@dedust/sdk": "latest",
+    "@ton/core": "latest",
+    "@ton/ton": "latest",
+    "@ton/crypto": "latest",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2"
