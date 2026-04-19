@@ -41,7 +41,12 @@ const buyPrice = +(Math.random() * 2 + 0.01).toFixed(6);
 const sellPrice = +(buyPrice * (1 + Math.random() * 0.03)).toFixed(6);
 const grossSpread = ((sellPrice - buyPrice) / buyPrice) * 100;
 const netSpread = Math.max(grossSpread - 0.35, 0);
+const tradeAmountTon = Number(pairCfg.amountInBase || 10);
+const estimatedProfitTon = (netSpread / 100) * tradeAmountTon;
 
+// ❗ фильтр — не показывать сделки с маленькой прибылью
+if (estimatedProfitTon < 0.03) continue;  
+const tradeAmountTon = Number(p.amountInBase || 10);
 return {
 id: index + 1,
 pair: p.pair,
@@ -51,7 +56,6 @@ buyPrice,
 sellPrice,
 grossSpreadPercent: +grossSpread.toFixed(2),
 netSpreadPercent: +netSpread.toFixed(2),
-const tradeAmountTon = Number(p.amountInBase || 10);
 
 estimatedProfitTon: +(Math.max(netSpread / 100 * tradeAmountTon, 0)).toFixed(3),
 verified: true,
