@@ -66,6 +66,49 @@ async function fetchJson(url, options = {}) {
 }
 
 async function getStonQuote(pairCfg) {
+  try {
+    const { StonApiClient } = require("@ston-fi/api");
+
+    const apiClient = new StonApiClient();
+
+    const offerUnits = BigInt(
+      Math.floor(Number(pairCfg.amountInBase) * Math.pow(10, pairCfg.baseDecimals))
+    ).toString();
+
+    const simulationResult = await apiClient.simulateSwap({
+      offerAddress: pairCfg.baseAddress,
+      askAddress: pairCfg.quoteAddress,
+      offerUnits,
+      slippageTolerance: "0.01"
+    });
+
+    const askUnits =
+      simulationResult?.minAskUnits ||
+      simulationResult?.askUnits ||
+      simulationResult?.estimatedAskUnits ||
+      null;
+
+    const amountOutHuman = askUnits
+      ? Number(askUnits) / Math.pow(10, pairCfg.quoteDecimals)
+      : 0;
+
+    const amountInHuman = Number(pairCfg.amountInBase);
+    const price = formatPrice(amountOutHuman, amountInHuman);
+
+    if (!price) return null;
+
+    return {
+      dex: "STON",
+      pair: pairCfg.pair,
+      amountIn: amountInHuman,
+      amountOut: +amountOutHuman.toFixed(6),
+      price
+    };
+  } catch (error) {
+    console.error("STON simulate error:", error.message);
+    return null;
+  }
+}
   const amountInRaw = BigInt(
     Math.floor(Number(pairCfg.amountInBase) * Math.pow(10, pairCfg.baseDecimals))
   ).toString();
