@@ -2,6 +2,15 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const { Address } = require("@ton/core");
+const { TonClient4 } = require("@ton/ton");
+const {
+  Factory,
+  MAINNET_FACTORY_ADDR,
+  Asset,
+  PoolType,
+  ReadinessStatus
+} = require("@dedust/sdk");
 
 const app = express();
 
@@ -9,6 +18,13 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
+const tonClient = new TonClient4({
+  endpoint: "https://mainnet-v4.tonhubapi.com"
+});
+
+const dedustFactory = tonClient.open(
+  Factory.createFromAddress(MAINNET_FACTORY_ADDR)
+);
 
 const configPath = path.join(__dirname, "swap_config.json");
 const SWAP_CONFIG = JSON.parse(fs.readFileSync(configPath, "utf-8"));
@@ -165,8 +181,41 @@ async function getStonQuote(pairCfg) {
   }
 }
 
-async function getDedustQuotePlaceholder() {
-  return null;
+async function getDedustQuote(pairCfg) {
+  try {
+    const TON = Asset.native();
+    const QUOTE = Asset.jetton(Address.parse(pairCfg.quoteAddress));
+
+    const pool = tonClient.open(
+      await dedustFactory.getPool(PoolType.VOLATILE, [TON, QUOTE])
+    );
+
+    const readiness = await pool.getReadinessStatus();
+
+    if (readiness !== ReadinessStatus.READY) {
+      return {
+        ok: false,
+        reason: "dedust-pool-not-ready",
+        debug: {
+          readiness: String(readiness)
+        }
+      };
+    }
+
+    return {
+      ok: true,
+      pair: pairCfg.pair,
+      debug: {
+        poolAddress: pool.address?.toString?.() || null,
+        readiness: String(readiness)
+      }
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error.message || "dedust-error"
+    };
+  }
 }
 
 app.get("/", (_req, res) => {
@@ -223,15 +272,34 @@ app.get("/api/debug/ston", async (_req, res) => {
   }
 });
 
+app.get("/api/debug/dedust", async (_req, res) => {
+  try {
+    const pairCfg = SWAP_CONFIG.pairs[0];
+    const dedust = await getDedustQuote(pairCfg);
+
+    return res.json({
+      ok: true,
+      source: "DEDUST-DEBUG",
+      pair: pairCfg,
+      result: dedust
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      error: error.message || "dedust debug failed"
+    });
+  }
+});
+
 app.get("/api/scanner/live", async (_req, res) => {
   try {
     const deals = [];
 
     for (const pairCfg of SWAP_CONFIG.pairs) {
       const ston = await getStonQuote(pairCfg);
-      const dedust = await getDedustQuotePlaceholder(pairCfg);
+      const dedust = await getDedustQuote(pairCfg);
 
-      if (ston?.ok && dedust) {
+      if (ston?.ok && dedust?.ok && dedust?.price) {
         let buyDex = "STON";
         let sellDex = "DeDust";
         let buyPrice = ston.price;
@@ -275,7 +343,9 @@ app.get("/api/scanner/live", async (_req, res) => {
           estimatedProfitTon: 0,
           verified: true,
           risk: "low",
-          note: "STON real quote ok, DeDust quote pending"
+          note: dedust?.ok
+            ? "DeDust pool found, quote pending"
+            : "STON real quote ok, DeDust quote pending"
         });
       }
     }
@@ -305,3 +375,5 @@ app.get("/api/scanner/live", async (_req, res) => {
 app.listen(PORT, () => {
   console.log("Server started on port", PORT);
 });
+
+        
