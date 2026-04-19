@@ -51,7 +51,9 @@ buyPrice,
 sellPrice,
 grossSpreadPercent: +grossSpread.toFixed(2),
 netSpreadPercent: +netSpread.toFixed(2),
-estimatedProfitTon: +(Math.max(netSpread / 100 * 10, 0)).toFixed(3),
+const tradeAmountTon = Number(p.amountInBase || 10);
+
+estimatedProfitTon: +(Math.max(netSpread / 100 * tradeAmountTon, 0)).toFixed(3),
 verified: true,
 risk: netSpread > 1.5 ? "low" : netSpread > 0.7 ? "medium" : "high"
 };
