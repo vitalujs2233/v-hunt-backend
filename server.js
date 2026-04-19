@@ -32,6 +32,30 @@ app.get("/api/scanner/live", (_req, res) => {
         buyPrice: 2.14,
         sellPrice: 2.19,
         profit: "есть спред"
+      },
+      {
+        pair: "TON/NOT",
+        buyDex: "DeDust",
+        sellDex: "STON",
+        buyPrice: 0.183,
+        sellPrice: 0.187,
+        profit: "средний спред"
+      },
+      {
+        pair: "TON/DOGS",
+        buyDex: "STON",
+        sellDex: "DeDust",
+        buyPrice: 0.0031,
+        sellPrice: 0.0032,
+        profit: "малый спред"
+      },
+      {
+        pair: "USDT/TON",
+        buyDex: "DeDust",
+        sellDex: "STON",
+        buyPrice: 0.467,
+        sellPrice: 0.472,
+        profit: "обратное направление"
       }
     ]
   });
