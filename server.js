@@ -9,15 +9,9 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
-const STON_API = "https://api.ston.fi";
 
 const configPath = path.join(__dirname, "swap_config.json");
 const SWAP_CONFIG = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-
-function toNum(v, fallback = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
-}
 
 function formatPrice(amountOut, amountIn) {
   if (!amountIn || !amountOut) return 0;
@@ -47,24 +41,6 @@ function buildFallbackDeals() {
   });
 }
 
-async function fetchJson(url, options = {}) {
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    },
-    ...options
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`${url} -> ${response.status}: ${text}`);
-  }
-
-  return response.json();
-}
-
 async function getStonQuote(pairCfg) {
   try {
     const { StonApiClient } = require("@ston-fi/api");
@@ -86,48 +62,7 @@ async function getStonQuote(pairCfg) {
       simulationResult?.minAskUnits ||
       simulationResult?.askUnits ||
       simulationResult?.estimatedAskUnits ||
-      null;
-
-    const amountOutHuman = askUnits
-      ? Number(askUnits) / Math.pow(10, pairCfg.quoteDecimals)
-      : 0;
-
-    const amountInHuman = Number(pairCfg.amountInBase);
-    const price = formatPrice(amountOutHuman, amountInHuman);
-
-    if (!price) return null;
-
-    return {
-      dex: "STON",
-      pair: pairCfg.pair,
-      amountIn: amountInHuman,
-      amountOut: +amountOutHuman.toFixed(6),
-      price
-    };
-  } catch (error) {
-    console.error("STON simulate error:", error.message);
-    return null;
-  }
-}
-  const amountInRaw = BigInt(
-    Math.floor(Number(pairCfg.amountInBase) * Math.pow(10, pairCfg.baseDecimals))
-  ).toString();
-
-  try {
-    const payload = await fetchJson(`${STON_API}/v1/swap/simulate`, {
-      method: "POST",
-      body: JSON.stringify({
-        offer_address: pairCfg.baseAddress,
-        ask_address: pairCfg.quoteAddress,
-        units: amountInRaw
-      })
-    });
-
-    const askUnits =
-      payload?.ask_units ||
-      payload?.destination_units ||
-      payload?.amount_out ||
-      payload?.units_out ||
+      simulationResult?.router?.minAskUnits ||
       null;
 
     const amountOutHuman = askUnits
@@ -152,8 +87,6 @@ async function getStonQuote(pairCfg) {
   }
 }
 
-// Временный placeholder для DeDust.
-// Следующим шагом заменим на настоящий pool quote.
 async function getDedustQuotePlaceholder() {
   return null;
 }
