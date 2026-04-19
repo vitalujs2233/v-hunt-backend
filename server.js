@@ -307,7 +307,8 @@ const dedust = await getDedustQuote(pairCfg);
 
 return res.json({
 ok: true,
-source: "DEDUST-DEBUG",
+source: "DEDUST-DEBUG-V2",
+time: Date.now(),
 pair: pairCfg,
 result: dedust
 });
