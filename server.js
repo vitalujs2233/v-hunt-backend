@@ -41,18 +41,78 @@ function buildFallbackDeals() {
   });
 }
 
+async function getStonAssets() {
+  try {
+    const { StonApiClient } = require("@ston-fi/api");
+    const apiClient = new StonApiClient();
+
+    const assets = await apiClient.getAssets();
+    return Array.isArray(assets) ? assets : [];
+  } catch (error) {
+    console.error("STON assets error:", error.message);
+    return [];
+  }
+}
+
+function findAssetAddressBySymbol(assets, symbol) {
+  const upper = String(symbol || "").toUpperCase();
+
+  const found = assets.find((asset) => {
+    const metaSymbol =
+      asset?.meta?.symbol ||
+      asset?.meta?.displayName ||
+      asset?.symbol ||
+      "";
+    return String(metaSymbol).toUpperCase() === upper;
+  });
+
+  if (!found) return null;
+
+  return (
+    found?.contractAddress ||
+    found?.address ||
+    found?.assetAddress ||
+    null
+  );
+}
+
 async function getStonQuote(pairCfg) {
   try {
     const { StonApiClient } = require("@ston-fi/api");
     const apiClient = new StonApiClient();
+
+    const assets = await getStonAssets();
+
+    const offerAddress =
+      String(pairCfg.baseSymbol).toUpperCase() === "TON"
+        ? "ton"
+        : findAssetAddressBySymbol(assets, pairCfg.baseSymbol);
+
+    const askAddress =
+      String(pairCfg.quoteSymbol).toUpperCase() === "TON"
+        ? "ton"
+        : findAssetAddressBySymbol(assets, pairCfg.quoteSymbol);
+
+    if (!offerAddress || !askAddress) {
+      return {
+        ok: false,
+        reason: "asset-address-not-found",
+        debug: {
+          baseSymbol: pairCfg.baseSymbol,
+          quoteSymbol: pairCfg.quoteSymbol,
+          offerAddress,
+          askAddress
+        }
+      };
+    }
 
     const offerUnits = BigInt(
       Math.floor(Number(pairCfg.amountInBase) * Math.pow(10, pairCfg.baseDecimals))
     ).toString();
 
     const simulationResult = await apiClient.simulateSwap({
-      offerAddress: pairCfg.baseAddress,
-      askAddress: pairCfg.quoteAddress,
+      offerAddress,
+      askAddress,
       offerUnits,
       slippageTolerance: "0.01"
     });
@@ -75,7 +135,11 @@ async function getStonQuote(pairCfg) {
       return {
         ok: false,
         reason: "no-price",
-        raw: simulationResult
+        debug: {
+          offerAddress,
+          askAddress,
+          simulationResult
+        }
       };
     }
 
@@ -86,7 +150,10 @@ async function getStonQuote(pairCfg) {
       amountIn: amountInHuman,
       amountOut: +amountOutHuman.toFixed(6),
       price,
-      raw: simulationResult
+      debug: {
+        offerAddress,
+        askAddress
+      }
     };
   } catch (error) {
     return {
@@ -110,6 +177,29 @@ app.get("/api/check", (_req, res) => {
     message: "Backend работает",
     time: new Date().toISOString()
   });
+});
+
+app.get("/api/debug/assets", async (_req, res) => {
+  try {
+    const assets = await getStonAssets();
+
+    const short = assets.slice(0, 20).map((asset) => ({
+      symbol: asset?.meta?.symbol || asset?.meta?.displayName || asset?.symbol || null,
+      contractAddress: asset?.contractAddress || asset?.address || asset?.assetAddress || null
+    }));
+
+    res.json({
+      ok: true,
+      source: "STON-ASSETS",
+      total: assets.length,
+      sample: short
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message || "assets debug failed"
+    });
+  }
 });
 
 app.get("/api/debug/ston", async (_req, res) => {
