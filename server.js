@@ -21,43 +21,36 @@ app.get("/api/check", (_req, res) => {
 });
 
 app.get("/api/scanner/live", (_req, res) => {
+  const pairs = [
+    "TON/USDT",
+    "TON/NOT",
+    "TON/DOGS",
+    "TON/GRAM",
+    "TON/BOLT",
+    "TON/JETTON",
+    "USDT/TON",
+    "DOGS/TON",
+    "NOT/TON"
+  ];
+
+  const deals = pairs.map((pair) => {
+    const buyPrice = +(Math.random() * 2 + 0.001).toFixed(4);
+    const sellPrice = +(buyPrice + Math.random() * 0.05).toFixed(4);
+
+    return {
+      pair,
+      buyDex: Math.random() > 0.5 ? "STON" : "DeDust",
+      sellDex: Math.random() > 0.5 ? "STON" : "DeDust",
+      buyPrice,
+      sellPrice,
+      spread: ((sellPrice - buyPrice) / buyPrice * 100).toFixed(2) + "%"
+    };
+  });
+
   res.json({
     ok: true,
-    source: "NEW-BACKEND",
-    deals: [
-      {
-        pair: "TON/USDT",
-        buyDex: "STON",
-        sellDex: "DeDust",
-        buyPrice: 2.14,
-        sellPrice: 2.19,
-        profit: "есть спред"
-      },
-      {
-        pair: "TON/NOT",
-        buyDex: "DeDust",
-        sellDex: "STON",
-        buyPrice: 0.183,
-        sellPrice: 0.187,
-        profit: "средний спред"
-      },
-      {
-        pair: "TON/DOGS",
-        buyDex: "STON",
-        sellDex: "DeDust",
-        buyPrice: 0.0031,
-        sellPrice: 0.0032,
-        profit: "малый спред"
-      },
-      {
-        pair: "USDT/TON",
-        buyDex: "DeDust",
-        sellDex: "STON",
-        buyPrice: 0.467,
-        sellPrice: 0.472,
-        profit: "обратное направление"
-      }
-    ]
+    source: "DYNAMIC-SCANNER",
+    deals
   });
 });
 
