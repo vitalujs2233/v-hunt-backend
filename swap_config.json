@@ -1,0 +1,15 @@
+{
+  "network": "mainnet",
+  "pairs": [
+    {
+      "pair": "TON/USDT",
+      "baseSymbol": "TON",
+      "quoteSymbol": "USDT",
+      "baseAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
+      "quoteAddress": "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
+      "baseDecimals": 9,
+      "quoteDecimals": 6,
+      "amountInBase": "10"
+    }
+  ]
+}
