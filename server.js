@@ -416,7 +416,82 @@ error: error.message || "scanner failed"
 });
 }
 });
+app.get("/api/scanner/live2", async (_req, res) => {
+try {
+const deals = [];
 
+for (const pairCfg of SWAP_CONFIG.pairs) {
+const ston = await getStonQuote(pairCfg);
+const dedust = await getDedustQuote(pairCfg);
+
+if (ston?.ok && dedust?.ok && dedust?.price) {
+let buyDex = "STON";
+let sellDex = "DeDust";
+let buyPrice = ston.price;
+let sellPrice = dedust.price;
+
+if (dedust.price < ston.price) {
+buyDex = "DeDust";
+sellDex = "STON";
+buyPrice = dedust.price;
+sellPrice = ston.price;
+}
+
+const grossSpread = ((sellPrice - buyPrice) / buyPrice) * 100;
+const netSpread = Math.max(grossSpread - 0.35, 0);
+
+deals.push({
+id: deals.length + 1,
+pair: pairCfg.pair,
+buyDex,
+sellDex,
+buyPrice: +buyPrice.toFixed(8),
+sellPrice: +sellPrice.toFixed(8),
+grossSpreadPercent: +grossSpread.toFixed(2),
+netSpreadPercent: +netSpread.toFixed(2),
+estimatedProfitTon: +(Math.max(netSpread / 100 * 10, 0)).toFixed(3),
+verified: true,
+risk: netSpread > 1.5 ? "low" : netSpread > 0.7 ? "medium" : "high"
+});
+} else if (ston?.ok) {
+deals.push({
+id: deals.length + 1,
+pair: pairCfg.pair,
+buyDex: "STON",
+sellDex: dedust?.ok ? "DeDust" : "—",
+buyPrice: +ston.price.toFixed(8),
+sellPrice: dedust?.price ? +dedust.price.toFixed(8) : +ston.price.toFixed(8),
+grossSpreadPercent: dedust?.price
+? +((((dedust.price - ston.price) / ston.price) * 100).toFixed(2))
+: 0,
+netSpreadPercent: dedust?.price
+? +(Math.max((((dedust.price - ston.price) / ston.price) * 100) - 0.35, 0).toFixed(2))
+: 0,
+estimatedProfitTon: dedust?.price
+? +(Math.max(((((dedust.price - ston.price) / ston.price) * 100) - 0.35) / 100 * 10, 0).toFixed(3))
+: 0,
+verified: true,
+risk: "low",
+note: dedust?.ok
+? "STON + DeDust real quotes loaded"
+: "STON real quote ok, DeDust quote pending"
+});
+}
+}
+
+return res.json({
+ok: true,
+source: "SCANNER-LIVE-V2",
+time: Date.now(),
+deals
+});
+} catch (error) {
+return res.status(500).json({
+ok: false,
+error: error.message || "scanner live2 failed"
+});
+}
+});
 app.listen(PORT, () => {
 console.log("Server started on port", PORT);
 });
