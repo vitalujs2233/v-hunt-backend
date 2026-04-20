@@ -1,16 +1,3 @@
-
-1 из 68 385
-(без темы)
-Входящие
-
-Aleksandr Gruznov
-Прикрепленные файлы
-18:02 (0 минут назад)
-кому: мне
-
-Похоже, что язык письма: английский
- Один прикрепленный файл
-  •  Проверено на вирусы системой Gmail
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
