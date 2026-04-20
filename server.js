@@ -4,7 +4,6 @@ const fs = require("fs");
 const path = require("path");
 const { Address } = require("@ton/core");
 const { TonClient4 } = require("@ton/ton");
-const verifiedTokens = require("./verified_tokens.json");
 const {
   Factory,
   MAINNET_FACTORY_ADDR,
@@ -634,13 +633,6 @@ app.get("/api/quote/roundtrip", async (req, res) => {
       });
     }
 
-    if (!isVerifiedToken(pairCfgBase.quoteAddress)) {
-      return res.status(400).json({
-        ok: false,
-        error: "token not in verified whitelist"
-      });
-    }
-
     const pairCfg = {
       ...pairCfgBase,
       amountInBase: String(amount)
@@ -757,13 +749,6 @@ app.get("/api/tx/ston-buy", async (req, res) => {
       return res.status(404).json({
         ok: false,
         error: "pair not found in swap_config"
-      });
-    }
-
-    if (!isVerifiedToken(pairCfgBase.quoteAddress)) {
-      return res.status(400).json({
-        ok: false,
-        error: "token not in verified whitelist"
       });
     }
 
@@ -887,13 +872,6 @@ app.get("/api/tx/ston-sell", async (req, res) => {
       return res.status(404).json({
         ok: false,
         error: "pair not found in swap_config"
-      });
-    }
-
-    if (!isVerifiedToken(pairCfgBase.quoteAddress)) {
-      return res.status(400).json({
-        ok: false,
-        error: "token not in verified whitelist"
       });
     }
 
