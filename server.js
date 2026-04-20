@@ -512,6 +512,95 @@ setInterval(() => {
   });
 }, REFRESH_INTERVAL_MS);
 
+
+app.get("/api/quote/roundtrip", async (req, res) => {
+  try {
+    const pair = String(req.query.pair || "").trim();
+    const amount = Number(req.query.amount || 0);
+
+    if (!pair) {
+      return res.status(400).json({
+        ok: false,
+        error: "pair is required"
+      });
+    }
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        ok: false,
+        error: "amount must be greater than 0"
+      });
+    }
+
+    const pairCfgBase = SWAP_CONFIG.pairs.find((p) => p.pair === pair);
+
+    if (!pairCfgBase) {
+      return res.status(404).json({
+        ok: false,
+        error: "pair not found in swap_config"
+      });
+    }
+
+    const pairCfg = {
+      ...pairCfgBase,
+      amountInBase: String(amount)
+    };
+
+    const ston = await getStonQuote(pairCfg);
+    const dedust = await getDedustQuote(pairCfg);
+
+    if (!ston?.ok || !dedust?.ok) {
+      return res.json({
+        ok: false,
+        pair,
+        amountInTon: amount,
+        ston,
+        dedust,
+        error: "quote unavailable on one of dexes"
+      });
+    }
+
+    let buyDex = "STON";
+    let sellDex = "DeDust";
+    let buyPrice = ston.price;
+    let sellPrice = dedust.price;
+
+    if (dedust.price < ston.price) {
+      buyDex = "DeDust";
+      sellDex = "STON";
+      buyPrice = dedust.price;
+      sellPrice = ston.price;
+    }
+
+    const DEX_FEE = 0.003;
+    const GAS_BUFFER_TON = 0.05;
+
+    const amountInTon = amount;
+    const expectedTokenOut = amountInTon * buyPrice * (1 - DEX_FEE);
+    const expectedTonBack = (expectedTokenOut / sellPrice) * (1 - DEX_FEE);
+    const estimatedProfitTon = expectedTonBack - amountInTon - GAS_BUFFER_TON;
+
+    return res.json({
+      ok: true,
+      pair,
+      amountInTon,
+      buyDex,
+      sellDex,
+      buyPrice: +buyPrice.toFixed(8),
+      sellPrice: +sellPrice.toFixed(8),
+      expectedTokenOut: +expectedTokenOut.toFixed(6),
+      expectedTonBack: +expectedTonBack.toFixed(6),
+      estimatedProfitTon: +estimatedProfitTon.toFixed(3),
+      canExecute: estimatedProfitTon > 0
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      error: error.message || "roundtrip quote failed"
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log("Server started on port", PORT);
 });
