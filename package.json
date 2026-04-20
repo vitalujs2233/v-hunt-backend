@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@ston-fi/api": "latest",
+    "@ston-fi/sdk": "latest",
     "@dedust/sdk": "latest",
     "@ton/core": "latest",
     "@ton/ton": "latest",
