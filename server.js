@@ -321,26 +321,6 @@ app.get("/api/debug/dedust", async (_req, res) => {
   }
 });
 
-app.get("/api/debug/dedust2", async (_req, res) => {
-  try {
-    const pairCfg = SWAP_CONFIG.pairs[0];
-    const dedust = await getDedustQuote(pairCfg);
-
-    return res.json({
-      ok: true,
-      source: "DEDUST-DEBUG-V2",
-      time: Date.now(),
-      pair: pairCfg,
-      result: dedust
-    });
-  } catch (error) {
-    return res.status(500).json({
-      ok: false,
-      error: error.message || "dedust2 debug failed"
-    });
-  }
-});
-
 app.get("/api/scanner/live", async (_req, res) => {
   try {
     const deals = [];
