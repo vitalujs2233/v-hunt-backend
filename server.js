@@ -23,69 +23,9 @@ const REFRESH_INTERVAL_MS = 12000;
 const DEX_FEE_RATE = 0.003;
 const GAS_BUFFER_TON = 0.05;
 const SERVICE_FEE_TON = 0.02;
-
-function isVerifiedToken(address){
-  if (!address) return false;
-  return verifiedTokens.some(t => String(t.address).toLowerCase() === String(address).toLowerCase() && t.verified);
-}
-
-function checkLiquidityFilter({ amountInTon, expectedTonBack, rawSpreadPercent, dexFeeTon, gasFeeTon, serviceFeeTon }) {
-  const amountIn = Number(amountInTon || 0);
-  const tonBack = Number(expectedTonBack || 0);
-  const spread = Math.abs(Number(rawSpreadPercent || 0));
-  const totalFees = Number(dexFeeTon || 0) + Number(gasFeeTon || 0) + Number(serviceFeeTon || 0);
-
-  if (!amountIn || !tonBack) {
-    return {
-      ok: false,
-      reason: "no-liquidity-data"
-    };
-  }
-
-  if (amountIn < MIN_LIQUIDITY_TON) {
-    return {
-      ok: false,
-      reason: "trade-size-too-small",
-      minLiquidityTon: MIN_LIQUIDITY_TON
-    };
-  }
-
-  const tonBackRatio = tonBack / amountIn;
-  const priceImpactPercent = Math.max(((amountIn - tonBack) / amountIn) * 100, 0);
-
-  if (tonBackRatio < MIN_EXPECTED_TON_BACK_RATIO) {
-    return {
-      ok: false,
-      reason: "low-effective-liquidity",
-      tonBackRatio: +tonBackRatio.toFixed(4),
-      minTonBackRatio: MIN_EXPECTED_TON_BACK_RATIO
-    };
-  }
-
-  if (priceImpactPercent > MAX_PRICE_IMPACT_PERCENT) {
-    return {
-      ok: false,
-      reason: "price-impact-too-high",
-      priceImpactPercent: +priceImpactPercent.toFixed(2),
-      maxPriceImpactPercent: MAX_PRICE_IMPACT_PERCENT
-    };
-  }
-
-  return {
-    ok: true,
-    tonBackRatio: +tonBackRatio.toFixed(4),
-    priceImpactPercent: +priceImpactPercent.toFixed(2),
-    totalFeesTon: +totalFees.toFixed(3),
-    rawSpreadPercent: +spread.toFixed(2)
-  };
-}
-
 const SERVICE_FEE_WALLET = "UQCWnrQ8uMswELtmUkZuC1wuqZoUe9E5XonXxVxcrUzgvnGS";
 const STON_SDK_RPC_ENDPOINT = process.env.STON_SDK_RPC_ENDPOINT || "https://toncenter.com/api/v2/jsonRPC";
 const STON_REFERRAL_BPS = Number(process.env.STON_REFERRAL_BPS || 10);
-const MIN_LIQUIDITY_TON = Number(process.env.MIN_LIQUIDITY_TON || 3);
-const MAX_PRICE_IMPACT_PERCENT = Number(process.env.MAX_PRICE_IMPACT_PERCENT || 5);
-const MIN_EXPECTED_TON_BACK_RATIO = Number(process.env.MIN_EXPECTED_TON_BACK_RATIO || 0.92);
 
 const tonClient = new TonClient4({
   endpoint: "https://mainnet-v4.tonhubapi.com"
@@ -112,7 +52,7 @@ function formatPrice(amountOut, amountIn) {
 }
 
 function buildFallbackDeals() {
-  return SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').map((p, index) => {
+  return SWAP_CONFIG.pairs.map((p, index) => {
     const buyPrice = +(Math.random() * 2 + 0.01).toFixed(6);
     const sellPrice = +(buyPrice * (1 + Math.random() * 0.03)).toFixed(6);
     const grossSpread = ((sellPrice - buyPrice) / buyPrice) * 100;
@@ -325,7 +265,7 @@ async function getDedustQuote(pairCfg) {
 
 async function buildLiveDeals() {
   const pairResults = await Promise.all(
-    SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').map(async (pairCfg) => {
+    SWAP_CONFIG.pairs.map(async (pairCfg) => {
       const ston = await getStonQuote(pairCfg);
       const dedust = await getDedustQuote(pairCfg);
       const tradeAmountTon = Number(pairCfg.amountInBase || 10);
@@ -348,14 +288,6 @@ async function buildLiveDeals() {
         const expectedTokenOut = tradeAmountTon * buyPrice * (1 - DEX_FEE_RATE);
         const expectedTonBack = (expectedTokenOut / sellPrice) * (1 - DEX_FEE_RATE);
         const dexFeeTon = tradeAmountTon * DEX_FEE_RATE * 2;
-        const liquidityCheck = checkLiquidityFilter({
-          amountInTon: tradeAmountTon,
-          expectedTonBack,
-          rawSpreadPercent,
-          dexFeeTon,
-          gasFeeTon: GAS_BUFFER_TON,
-          serviceFeeTon: SERVICE_FEE_TON
-        });
         const estimatedProfitTon = expectedTonBack - tradeAmountTon - GAS_BUFFER_TON - SERVICE_FEE_TON;
         const netProfitPercent = tradeAmountTon > 0
           ? (estimatedProfitTon / tradeAmountTon) * 100
@@ -378,14 +310,10 @@ async function buildLiveDeals() {
             gasFeeTon: +GAS_BUFFER_TON.toFixed(3),
             serviceFeeTon: +SERVICE_FEE_TON.toFixed(3),
             serviceFeeWallet: SERVICE_FEE_WALLET,
-            liquidityOk: liquidityCheck.ok,
-            liquidityReason: liquidityCheck.reason || null,
-            tonBackRatio: liquidityCheck.tonBackRatio ?? null,
-            priceImpactPercent: liquidityCheck.priceImpactPercent ?? null,
             estimatedProfitTon: +estimatedProfitTon.toFixed(3),
-            canExecute: estimatedProfitTon > 0 && liquidityCheck.ok,
-            verified: estimatedProfitTon > 0 && liquidityCheck.ok,
-            risk: !liquidityCheck.ok ? "high" : estimatedProfitTon > 0.15 ? "low" : estimatedProfitTon > 0.03 ? "medium" : "high"
+            canExecute: estimatedProfitTon > 0,
+            verified: estimatedProfitTon > 0,
+            risk: estimatedProfitTon > 0.15 ? "low" : estimatedProfitTon > 0.03 ? "medium" : "high"
           }
         };
       }
@@ -511,7 +439,7 @@ app.get("/api/debug/assets", async (_req, res) => {
 
 app.get("/api/debug/ston", async (_req, res) => {
   try {
-    const pairCfg = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON')[0];
+    const pairCfg = SWAP_CONFIG.pairs[0];
     const ston = await getStonQuote(pairCfg);
 
     return res.json({
@@ -530,7 +458,7 @@ app.get("/api/debug/ston", async (_req, res) => {
 
 app.get("/api/debug/dedust", async (_req, res) => {
   try {
-    const pairCfg = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON')[0];
+    const pairCfg = SWAP_CONFIG.pairs[0];
     const dedust = await getDedustQuote(pairCfg);
 
     return res.json({
@@ -624,7 +552,7 @@ app.get("/api/quote/roundtrip", async (req, res) => {
       });
     }
 
-    const pairCfgBase = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').find((p) => p.pair === pair);
+    const pairCfgBase = SWAP_CONFIG.pairs.find((p) => p.pair === pair);
 
     if (!pairCfgBase) {
       return res.status(404).json({
@@ -669,14 +597,6 @@ app.get("/api/quote/roundtrip", async (req, res) => {
     const expectedTokenOut = amountInTon * buyPrice * (1 - DEX_FEE_RATE);
     const expectedTonBack = (expectedTokenOut / sellPrice) * (1 - DEX_FEE_RATE);
     const dexFeeTon = amountInTon * DEX_FEE_RATE * 2;
-    const liquidityCheck = checkLiquidityFilter({
-      amountInTon,
-      expectedTonBack,
-      rawSpreadPercent,
-      dexFeeTon,
-      gasFeeTon: GAS_BUFFER_TON,
-      serviceFeeTon: SERVICE_FEE_TON
-    });
     const estimatedProfitTon = expectedTonBack - amountInTon - GAS_BUFFER_TON - SERVICE_FEE_TON;
     const estimatedProfitPercent = amountInTon > 0
       ? (estimatedProfitTon / amountInTon) * 100
@@ -697,15 +617,9 @@ app.get("/api/quote/roundtrip", async (req, res) => {
       gasFeeTon: +GAS_BUFFER_TON.toFixed(3),
       serviceFeeTon: +SERVICE_FEE_TON.toFixed(3),
       serviceFeeWallet: SERVICE_FEE_WALLET,
-      liquidityOk: liquidityCheck.ok,
-      liquidityReason: liquidityCheck.reason || null,
-      tonBackRatio: liquidityCheck.tonBackRatio ?? null,
-      priceImpactPercent: liquidityCheck.priceImpactPercent ?? null,
-      minLiquidityTon: MIN_LIQUIDITY_TON,
-      maxPriceImpactPercent: MAX_PRICE_IMPACT_PERCENT,
       estimatedProfitTon: +estimatedProfitTon.toFixed(3),
       estimatedProfitPercent: +estimatedProfitPercent.toFixed(2),
-      canExecute: estimatedProfitTon > 0 && liquidityCheck.ok
+      canExecute: estimatedProfitTon > 0
     });
   } catch (error) {
     return res.status(500).json({
@@ -743,7 +657,7 @@ app.get("/api/tx/ston-buy", async (req, res) => {
       });
     }
 
-    const pairCfgBase = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').find((p) => p.pair === pair);
+    const pairCfgBase = SWAP_CONFIG.pairs.find((p) => p.pair === pair);
 
     if (!pairCfgBase) {
       return res.status(404).json({
@@ -866,7 +780,7 @@ app.get("/api/tx/ston-sell", async (req, res) => {
       });
     }
 
-    const pairCfgBase = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').find((p) => p.pair === pair);
+    const pairCfgBase = SWAP_CONFIG.pairs.find((p) => p.pair === pair);
 
     if (!pairCfgBase) {
       return res.status(404).json({
