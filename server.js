@@ -24,6 +24,11 @@ const DEX_FEE_RATE = 0.003;
 const GAS_BUFFER_TON = 0.05;
 const SERVICE_FEE_TON = 0.02;
 
+function isVerifiedToken(address){
+  if (!address) return false;
+  return verifiedTokens.some(t => String(t.address).toLowerCase() === String(address).toLowerCase() && t.verified);
+}
+
 function checkLiquidityFilter({ amountInTon, expectedTonBack, rawSpreadPercent, dexFeeTon, gasFeeTon, serviceFeeTon }) {
   const amountIn = Number(amountInTon || 0);
   const tonBack = Number(expectedTonBack || 0);
@@ -107,7 +112,7 @@ function formatPrice(amountOut, amountIn) {
 }
 
 function buildFallbackDeals() {
-  return SWAP_CONFIG.pairs.map((p, index) => {
+  return SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').map((p, index) => {
     const buyPrice = +(Math.random() * 2 + 0.01).toFixed(6);
     const sellPrice = +(buyPrice * (1 + Math.random() * 0.03)).toFixed(6);
     const grossSpread = ((sellPrice - buyPrice) / buyPrice) * 100;
@@ -320,7 +325,7 @@ async function getDedustQuote(pairCfg) {
 
 async function buildLiveDeals() {
   const pairResults = await Promise.all(
-    SWAP_CONFIG.pairs.map(async (pairCfg) => {
+    SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').map(async (pairCfg) => {
       const ston = await getStonQuote(pairCfg);
       const dedust = await getDedustQuote(pairCfg);
       const tradeAmountTon = Number(pairCfg.amountInBase || 10);
@@ -506,7 +511,7 @@ app.get("/api/debug/assets", async (_req, res) => {
 
 app.get("/api/debug/ston", async (_req, res) => {
   try {
-    const pairCfg = SWAP_CONFIG.pairs[0];
+    const pairCfg = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON')[0];
     const ston = await getStonQuote(pairCfg);
 
     return res.json({
@@ -525,7 +530,7 @@ app.get("/api/debug/ston", async (_req, res) => {
 
 app.get("/api/debug/dedust", async (_req, res) => {
   try {
-    const pairCfg = SWAP_CONFIG.pairs[0];
+    const pairCfg = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON')[0];
     const dedust = await getDedustQuote(pairCfg);
 
     return res.json({
@@ -619,7 +624,7 @@ app.get("/api/quote/roundtrip", async (req, res) => {
       });
     }
 
-    const pairCfgBase = SWAP_CONFIG.pairs.find((p) => p.pair === pair);
+    const pairCfgBase = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').find((p) => p.pair === pair);
 
     if (!pairCfgBase) {
       return res.status(404).json({
@@ -738,7 +743,7 @@ app.get("/api/tx/ston-buy", async (req, res) => {
       });
     }
 
-    const pairCfgBase = SWAP_CONFIG.pairs.find((p) => p.pair === pair);
+    const pairCfgBase = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').find((p) => p.pair === pair);
 
     if (!pairCfgBase) {
       return res.status(404).json({
@@ -861,7 +866,7 @@ app.get("/api/tx/ston-sell", async (req, res) => {
       });
     }
 
-    const pairCfgBase = SWAP_CONFIG.pairs.find((p) => p.pair === pair);
+    const pairCfgBase = SWAP_CONFIG.pairs.filter(p => isVerifiedToken(p.quoteAddress) || String(p.baseSymbol||'').toUpperCase()==='TON').find((p) => p.pair === pair);
 
     if (!pairCfgBase) {
       return res.status(404).json({
