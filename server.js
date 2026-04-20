@@ -18,6 +18,8 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
+const CACHE_TTL_MS = 15000;
+const REFRESH_INTERVAL_MS = 12000;
 
 const tonClient = new TonClient4({
   endpoint: "https://mainnet-v4.tonhubapi.com"
@@ -29,6 +31,14 @@ const dedustFactory = tonClient.open(
 
 const configPath = path.join(__dirname, "swap_config.json");
 const SWAP_CONFIG = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+
+const scannerCache = {
+  deals: [],
+  source: "CACHE-EMPTY",
+  updatedAt: 0,
+  isRefreshing: false,
+  lastError: null
+};
 
 function formatPrice(amountOut, amountIn) {
   if (!amountIn || !amountOut) return 0;
@@ -247,6 +257,128 @@ async function getDedustQuote(pairCfg) {
   }
 }
 
+async function buildLiveDeals() {
+  const pairResults = await Promise.all(
+    SWAP_CONFIG.pairs.map(async (pairCfg) => {
+      const ston = await getStonQuote(pairCfg);
+      const dedust = await getDedustQuote(pairCfg);
+      const tradeAmountTon = Number(pairCfg.amountInBase || 10);
+
+      if (ston?.ok && dedust?.ok && dedust?.price) {
+        let buyDex = "STON";
+        let sellDex = "DeDust";
+        let buyPrice = ston.price;
+        let sellPrice = dedust.price;
+
+        if (dedust.price < ston.price) {
+          buyDex = "DeDust";
+          sellDex = "STON";
+          buyPrice = dedust.price;
+          sellPrice = ston.price;
+        }
+
+        const grossSpread = ((sellPrice - buyPrice) / buyPrice) * 100;
+        const netSpread = Math.max(grossSpread - 0.35, 0);
+        const estimatedProfitTon = (netSpread / 100) * tradeAmountTon;
+
+        return {
+          pair: pairCfg.pair,
+          deal: {
+            pair: pairCfg.pair,
+            buyDex,
+            sellDex,
+            buyPrice: +buyPrice.toFixed(8),
+            sellPrice: +sellPrice.toFixed(8),
+            grossSpreadPercent: +grossSpread.toFixed(2),
+            netSpreadPercent: +netSpread.toFixed(2),
+            estimatedProfitTon: +estimatedProfitTon.toFixed(3),
+            verified: true,
+            risk: netSpread > 1.5 ? "low" : netSpread > 0.7 ? "medium" : "high"
+          }
+        };
+      }
+
+      if (ston?.ok) {
+        const grossSpreadPercent = dedust?.price
+          ? (((dedust.price - ston.price) / ston.price) * 100)
+          : 0;
+        const netSpreadPercent = dedust?.price
+          ? Math.max(grossSpreadPercent - 0.35, 0)
+          : 0;
+        const estimatedProfitTon = dedust?.price
+          ? (netSpreadPercent / 100) * tradeAmountTon
+          : 0;
+
+        return {
+          pair: pairCfg.pair,
+          deal: {
+            pair: pairCfg.pair,
+            buyDex: "STON",
+            sellDex: dedust?.ok ? "DeDust" : "—",
+            buyPrice: +ston.price.toFixed(8),
+            sellPrice: dedust?.price ? +dedust.price.toFixed(8) : +ston.price.toFixed(8),
+            grossSpreadPercent: +grossSpreadPercent.toFixed(2),
+            netSpreadPercent: +netSpreadPercent.toFixed(2),
+            estimatedProfitTon: +estimatedProfitTon.toFixed(3),
+            verified: true,
+            risk: "low",
+            note: dedust?.ok
+              ? "STON + DeDust real quotes loaded"
+              : "STON real quote ok, DeDust quote pending"
+          }
+        };
+      }
+
+      return null;
+    })
+  );
+
+  const deals = pairResults
+    .filter(Boolean)
+    .map((item, index) => ({
+      id: index + 1,
+      ...item.deal
+    }));
+
+  return deals;
+}
+
+async function refreshScannerCache() {
+  if (scannerCache.isRefreshing) return scannerCache;
+  scannerCache.isRefreshing = true;
+
+  try {
+    const deals = await buildLiveDeals();
+
+    scannerCache.deals = deals.length ? deals : buildFallbackDeals();
+    scannerCache.source = deals.length ? "SCANNER-LIVE-V3-CACHED" : "FALLBACK-DYNAMIC";
+    scannerCache.updatedAt = Date.now();
+    scannerCache.lastError = null;
+  } catch (error) {
+    console.error("refreshScannerCache error:", error);
+    scannerCache.lastError = error.message || "refresh failed";
+
+    if (!scannerCache.deals.length) {
+      scannerCache.deals = buildFallbackDeals();
+      scannerCache.source = "FALLBACK-DYNAMIC";
+      scannerCache.updatedAt = Date.now();
+    }
+  } finally {
+    scannerCache.isRefreshing = false;
+  }
+
+  return scannerCache;
+}
+
+function getCacheAgeMs() {
+  return scannerCache.updatedAt ? Date.now() - scannerCache.updatedAt : null;
+}
+
+function isCacheFresh() {
+  const age = getCacheAgeMs();
+  return age !== null && age < CACHE_TTL_MS && scannerCache.deals.length > 0;
+}
+
 app.get("/", (_req, res) => {
   res.send("V-HUNT BACKEND WORKING");
 });
@@ -255,7 +387,10 @@ app.get("/api/check", (_req, res) => {
   res.json({
     ok: true,
     message: "Backend работает",
-    time: new Date().toISOString()
+    time: new Date().toISOString(),
+    cacheAgeMs: getCacheAgeMs(),
+    cacheDeals: scannerCache.deals.length,
+    cacheSource: scannerCache.source
   });
 });
 
@@ -323,75 +458,15 @@ app.get("/api/debug/dedust", async (_req, res) => {
 
 app.get("/api/scanner/live", async (_req, res) => {
   try {
-    const deals = [];
-
-    for (const pairCfg of SWAP_CONFIG.pairs) {
-      const ston = await getStonQuote(pairCfg);
-      const dedust = await getDedustQuote(pairCfg);
-      const tradeAmountTon = Number(pairCfg.amountInBase || 10);
-
-      if (ston?.ok && dedust?.ok && dedust?.price) {
-        let buyDex = "STON";
-        let sellDex = "DeDust";
-        let buyPrice = ston.price;
-        let sellPrice = dedust.price;
-
-        if (dedust.price < ston.price) {
-          buyDex = "DeDust";
-          sellDex = "STON";
-          buyPrice = dedust.price;
-          sellPrice = ston.price;
-        }
-
-        const grossSpread = ((sellPrice - buyPrice) / buyPrice) * 100;
-        const netSpread = Math.max(grossSpread - 0.35, 0);
-        const estimatedProfitTon = (netSpread / 100) * tradeAmountTon;
-
-        deals.push({
-          id: deals.length + 1,
-          pair: pairCfg.pair,
-          buyDex,
-          sellDex,
-          buyPrice: +buyPrice.toFixed(8),
-          sellPrice: +sellPrice.toFixed(8),
-          grossSpreadPercent: +grossSpread.toFixed(2),
-          netSpreadPercent: +netSpread.toFixed(2),
-          estimatedProfitTon: +estimatedProfitTon.toFixed(3),
-          verified: true,
-          risk: netSpread > 1.5 ? "low" : netSpread > 0.7 ? "medium" : "high"
-        });
-      } else if (ston?.ok) {
-        deals.push({
-          id: deals.length + 1,
-          pair: pairCfg.pair,
-          buyDex: "STON",
-          sellDex: "—",
-          buyPrice: +ston.price.toFixed(8),
-          sellPrice: +ston.price.toFixed(8),
-          grossSpreadPercent: 0,
-          netSpreadPercent: 0,
-          estimatedProfitTon: 0,
-          verified: true,
-          risk: "low",
-          note: dedust?.ok
-            ? "DeDust quote ok, but no spread"
-            : "STON real quote ok, DeDust quote pending"
-        });
-      }
-    }
-
-    if (deals.length > 0) {
-      return res.json({
-        ok: true,
-        source: "STON-REAL-QUOTE",
-        deals
-      });
+    if (!isCacheFresh()) {
+      await refreshScannerCache();
     }
 
     return res.json({
       ok: true,
-      source: "FALLBACK-DYNAMIC",
-      deals: buildFallbackDeals()
+      source: scannerCache.source,
+      cacheAgeMs: getCacheAgeMs(),
+      deals: scannerCache.deals
     });
   } catch (error) {
     console.error("scanner live error:", error);
@@ -404,78 +479,20 @@ app.get("/api/scanner/live", async (_req, res) => {
 
 app.get("/api/scanner/live2", async (_req, res) => {
   try {
-    const deals = [];
-
-    for (const pairCfg of SWAP_CONFIG.pairs) {
-      const ston = await getStonQuote(pairCfg);
-      const dedust = await getDedustQuote(pairCfg);
-      const tradeAmountTon = Number(pairCfg.amountInBase || 10);
-
-      if (ston?.ok && dedust?.ok && dedust?.price) {
-        let buyDex = "STON";
-        let sellDex = "DeDust";
-        let buyPrice = ston.price;
-        let sellPrice = dedust.price;
-
-        if (dedust.price < ston.price) {
-          buyDex = "DeDust";
-          sellDex = "STON";
-          buyPrice = dedust.price;
-          sellPrice = ston.price;
-        }
-
-        const grossSpread = ((sellPrice - buyPrice) / buyPrice) * 100;
-        const netSpread = Math.max(grossSpread - 0.35, 0);
-        const estimatedProfitTon = (netSpread / 100) * tradeAmountTon;
-
-        deals.push({
-          id: deals.length + 1,
-          pair: pairCfg.pair,
-          buyDex,
-          sellDex,
-          buyPrice: +buyPrice.toFixed(8),
-          sellPrice: +sellPrice.toFixed(8),
-          grossSpreadPercent: +grossSpread.toFixed(2),
-          netSpreadPercent: +netSpread.toFixed(2),
-          estimatedProfitTon: +estimatedProfitTon.toFixed(3),
-          verified: true,
-          risk: netSpread > 1.5 ? "low" : netSpread > 0.7 ? "medium" : "high"
-        });
-      } else if (ston?.ok) {
-        const grossSpreadPercent = dedust?.price
-          ? (((dedust.price - ston.price) / ston.price) * 100)
-          : 0;
-        const netSpreadPercent = dedust?.price
-          ? Math.max(grossSpreadPercent - 0.35, 0)
-          : 0;
-        const estimatedProfitTon = dedust?.price
-          ? (netSpreadPercent / 100) * tradeAmountTon
-          : 0;
-
-        deals.push({
-          id: deals.length + 1,
-          pair: pairCfg.pair,
-          buyDex: "STON",
-          sellDex: dedust?.ok ? "DeDust" : "—",
-          buyPrice: +ston.price.toFixed(8),
-          sellPrice: dedust?.price ? +dedust.price.toFixed(8) : +ston.price.toFixed(8),
-          grossSpreadPercent: +grossSpreadPercent.toFixed(2),
-          netSpreadPercent: +netSpreadPercent.toFixed(2),
-          estimatedProfitTon: +estimatedProfitTon.toFixed(3),
-          verified: true,
-          risk: "low",
-          note: dedust?.ok
-            ? "STON + DeDust real quotes loaded"
-            : "STON real quote ok, DeDust quote pending"
-        });
-      }
+    if (!scannerCache.deals.length) {
+      await refreshScannerCache();
+    } else if (!isCacheFresh()) {
+      refreshScannerCache().catch((error) => {
+        console.error("background cache refresh error:", error);
+      });
     }
 
     return res.json({
       ok: true,
-      source: "SCANNER-LIVE-V2",
+      source: scannerCache.source,
       time: Date.now(),
-      deals
+      cacheAgeMs: getCacheAgeMs(),
+      deals: scannerCache.deals
     });
   } catch (error) {
     return res.status(500).json({
@@ -484,6 +501,16 @@ app.get("/api/scanner/live2", async (_req, res) => {
     });
   }
 });
+
+refreshScannerCache().catch((error) => {
+  console.error("initial cache warmup error:", error);
+});
+
+setInterval(() => {
+  refreshScannerCache().catch((error) => {
+    console.error("interval cache refresh error:", error);
+  });
+}, REFRESH_INTERVAL_MS);
 
 app.listen(PORT, () => {
   console.log("Server started on port", PORT);
