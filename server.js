@@ -1,3 +1,16 @@
+
+1 из 68 385
+(без темы)
+Входящие
+
+Aleksandr Gruznov
+Прикрепленные файлы
+18:02 (0 минут назад)
+кому: мне
+
+Похоже, что язык письма: английский
+ Один прикрепленный файл
+  •  Проверено на вирусы системой Gmail
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -23,7 +36,7 @@ const REFRESH_INTERVAL_MS = 12000;
 const DEX_FEE_RATE = 0.003;
 const GAS_BUFFER_TON = 0.05;
 const SERVICE_FEE_TON = 0.02;
-const SERVICE_FEE_WALLET = "PUT_YOUR_TON_WALLET_HERE";
+const SERVICE_FEE_WALLET = "UQCWnrQ8uMswELtmUkZuC1wuqZoUe9E5XonXxVxcrUzgvnGS";
 
 const tonClient = new TonClient4({
   endpoint: "https://mainnet-v4.tonhubapi.com"
