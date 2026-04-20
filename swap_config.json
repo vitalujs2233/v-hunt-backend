@@ -5,9 +5,19 @@
 "baseSymbol": "TON",
 "quoteSymbol": "USDT",
 "baseAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
-"quoteAddress": "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs",
+"quoteAddress": "EQCxE6mUtQJKFn6Qb8S0g6f8qX2HFqRSbVSSMzdEar3NofM2",
 "baseDecimals": 9,
 "quoteDecimals": 6,
+"amountInBase": "10"
+},
+{
+"pair": "TON/NOT",
+"baseSymbol": "TON",
+"quoteSymbol": "NOT",
+"baseAddress": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
+"quoteAddress": "EQAvlW1tVq0n4R7Vd5uW6cQvYzZ2yXlH6KfW4j8Z9Yk9lJkJ",
+"baseDecimals": 9,
+"quoteDecimals": 9,
 "amountInBase": "10"
 }
 ]
