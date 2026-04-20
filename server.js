@@ -24,6 +24,8 @@ const DEX_FEE_RATE = 0.003;
 const GAS_BUFFER_TON = 0.05;
 const SERVICE_FEE_TON = 0.02;
 const SERVICE_FEE_WALLET = "UQCWnrQ8uMswELtmUkZuC1wuqZoUe9E5XonXxVxcrUzgvnGS";
+const STON_SDK_RPC_ENDPOINT = process.env.STON_SDK_RPC_ENDPOINT || "https://toncenter.com/api/v2/jsonRPC";
+const STON_REFERRAL_BPS = Number(process.env.STON_REFERRAL_BPS || 10);
 
 const tonClient = new TonClient4({
   endpoint: "https://mainnet-v4.tonhubapi.com"
@@ -623,6 +625,129 @@ app.get("/api/quote/roundtrip", async (req, res) => {
     return res.status(500).json({
       ok: false,
       error: error.message || "roundtrip quote failed"
+    });
+  }
+});
+
+
+app.get("/api/tx/ston-buy", async (req, res) => {
+  try {
+    const pair = String(req.query.pair || "").trim();
+    const amount = Number(req.query.amount || 0);
+    const wallet = String(req.query.wallet || "").trim();
+
+    if (!pair) {
+      return res.status(400).json({
+        ok: false,
+        error: "pair is required"
+      });
+    }
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        ok: false,
+        error: "amount must be greater than 0"
+      });
+    }
+
+    if (!wallet) {
+      return res.status(400).json({
+        ok: false,
+        error: "wallet is required"
+      });
+    }
+
+    const pairCfgBase = SWAP_CONFIG.pairs.find((p) => p.pair === pair);
+
+    if (!pairCfgBase) {
+      return res.status(404).json({
+        ok: false,
+        error: "pair not found in swap_config"
+      });
+    }
+
+    if (String(pairCfgBase.baseSymbol || "").toUpperCase() !== "TON") {
+      return res.status(400).json({
+        ok: false,
+        error: "only TON -> jetton buy is supported in this step"
+      });
+    }
+
+    const pairCfg = {
+      ...pairCfgBase,
+      amountInBase: String(amount)
+    };
+
+    const { StonApiClient } = require("@ston-fi/api");
+    const { dexFactory, Client } = require("@ston-fi/sdk");
+
+    const apiClient = new StonApiClient();
+
+    const offerUnits = BigInt(
+      Math.floor(Number(pairCfg.amountInBase) * Math.pow(10, pairCfg.baseDecimals))
+    ).toString();
+
+    const simulationResult = await apiClient.simulateSwap({
+      offerAddress: pairCfg.baseAddress || "ton",
+      askAddress: pairCfg.quoteAddress,
+      offerUnits,
+      slippageTolerance: "0.01"
+    });
+
+    const { router: routerInfo } = simulationResult;
+
+    if (!routerInfo?.address || !routerInfo?.ptonMasterAddress) {
+      return res.status(500).json({
+        ok: false,
+        error: "router info missing in simulation result"
+      });
+    }
+
+    const tonApiClient = new Client({
+      endpoint: STON_SDK_RPC_ENDPOINT
+    });
+
+    const dexContracts = dexFactory(routerInfo);
+    const router = tonApiClient.open(
+      dexContracts.Router.create(routerInfo.address)
+    );
+    const proxyTon = dexContracts.pTON.create(routerInfo.ptonMasterAddress);
+
+    const txParams = await router.getSwapTonToJettonTxParams({
+      userWalletAddress: wallet,
+      offerAmount: simulationResult.offerUnits,
+      minAskAmount: simulationResult.minAskUnits,
+      askJettonAddress: simulationResult.askAddress,
+      proxyTon,
+      referralAddress: SERVICE_FEE_WALLET,
+      referralValue: STON_REFERRAL_BPS
+    });
+
+    return res.json({
+      ok: true,
+      step: "STON_BUY",
+      pair,
+      amountInTon: amount,
+      wallet,
+      referralAddress: SERVICE_FEE_WALLET,
+      referralValue: STON_REFERRAL_BPS,
+      routerAddress: routerInfo.address,
+      ptonMasterAddress: routerInfo.ptonMasterAddress,
+      simulation: {
+        offerUnits: simulationResult.offerUnits,
+        minAskUnits: simulationResult.minAskUnits,
+        askAddress: simulationResult.askAddress
+      },
+      tonConnectMessage: {
+        address: txParams.to.toString(),
+        amount: txParams.value.toString(),
+        payload: txParams.body?.toBoc().toString("base64") || null
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      error: error.message || "ston buy tx build failed"
     });
   }
 });
