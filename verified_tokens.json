@@ -16,17 +16,5 @@
     "address": "EQAvlW1tVq0n4R7Vd5uW6cQvYzZ2yXlH6KfW4j8Z9Yk9lJkJ",
     "decimals": 9,
     "verified": true
-  },
-  {
-    "symbol": "DOGS",
-    "address": "EQC3exampleDOGSaddressxxxxxxxxxxxxxxxxxxxxxxxx",
-    "decimals": 9,
-    "verified": true
-  },
-  {
-    "symbol": "STON",
-    "address": "EQBexampleSTONaddressxxxxxxxxxxxxxxxxxxxxxxxx",
-    "decimals": 9,
-    "verified": true
   }
 ]
