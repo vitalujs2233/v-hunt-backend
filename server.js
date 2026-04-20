@@ -20,6 +20,10 @@ app.use(express.json());
 const PORT = process.env.PORT || 8080;
 const CACHE_TTL_MS = 15000;
 const REFRESH_INTERVAL_MS = 12000;
+const DEX_FEE_RATE = 0.003;
+const GAS_BUFFER_TON = 0.05;
+const SERVICE_FEE_TON = 0.02;
+const SERVICE_FEE_WALLET = "PUT_YOUR_TON_WALLET_HERE";
 
 const tonClient = new TonClient4({
   endpoint: "https://mainnet-v4.tonhubapi.com"
@@ -277,9 +281,15 @@ async function buildLiveDeals() {
           sellPrice = ston.price;
         }
 
-        const grossSpread = ((sellPrice - buyPrice) / buyPrice) * 100;
-        const netSpread = Math.max(grossSpread - 0.35, 0);
-        const estimatedProfitTon = (netSpread / 100) * tradeAmountTon;
+        const rawSpreadPercent = ((sellPrice - buyPrice) / buyPrice) * 100;
+
+        const expectedTokenOut = tradeAmountTon * buyPrice * (1 - DEX_FEE_RATE);
+        const expectedTonBack = (expectedTokenOut / sellPrice) * (1 - DEX_FEE_RATE);
+        const dexFeeTon = tradeAmountTon * DEX_FEE_RATE * 2;
+        const estimatedProfitTon = expectedTonBack - tradeAmountTon - GAS_BUFFER_TON - SERVICE_FEE_TON;
+        const netProfitPercent = tradeAmountTon > 0
+          ? (estimatedProfitTon / tradeAmountTon) * 100
+          : 0;
 
         return {
           pair: pairCfg.pair,
@@ -289,11 +299,19 @@ async function buildLiveDeals() {
             sellDex,
             buyPrice: +buyPrice.toFixed(8),
             sellPrice: +sellPrice.toFixed(8),
-            grossSpreadPercent: +grossSpread.toFixed(2),
-            netSpreadPercent: +netSpread.toFixed(2),
+            rawSpreadPercent: +rawSpreadPercent.toFixed(2),
+            grossSpreadPercent: +rawSpreadPercent.toFixed(2),
+            netSpreadPercent: +netProfitPercent.toFixed(2),
+            expectedTokenOut: +expectedTokenOut.toFixed(6),
+            expectedTonBack: +expectedTonBack.toFixed(6),
+            dexFeeTon: +dexFeeTon.toFixed(3),
+            gasFeeTon: +GAS_BUFFER_TON.toFixed(3),
+            serviceFeeTon: +SERVICE_FEE_TON.toFixed(3),
+            serviceFeeWallet: SERVICE_FEE_WALLET,
             estimatedProfitTon: +estimatedProfitTon.toFixed(3),
-            verified: true,
-            risk: netSpread > 1.5 ? "low" : netSpread > 0.7 ? "medium" : "high"
+            canExecute: estimatedProfitTon > 0,
+            verified: estimatedProfitTon > 0,
+            risk: estimatedProfitTon > 0.15 ? "low" : estimatedProfitTon > 0.03 ? "medium" : "high"
           }
         };
       }
@@ -572,13 +590,15 @@ app.get("/api/quote/roundtrip", async (req, res) => {
       sellPrice = ston.price;
     }
 
-    const DEX_FEE = 0.003;
-    const GAS_BUFFER_TON = 0.05;
-
     const amountInTon = amount;
-    const expectedTokenOut = amountInTon * buyPrice * (1 - DEX_FEE);
-    const expectedTonBack = (expectedTokenOut / sellPrice) * (1 - DEX_FEE);
-    const estimatedProfitTon = expectedTonBack - amountInTon - GAS_BUFFER_TON;
+    const rawSpreadPercent = ((sellPrice - buyPrice) / buyPrice) * 100;
+    const expectedTokenOut = amountInTon * buyPrice * (1 - DEX_FEE_RATE);
+    const expectedTonBack = (expectedTokenOut / sellPrice) * (1 - DEX_FEE_RATE);
+    const dexFeeTon = amountInTon * DEX_FEE_RATE * 2;
+    const estimatedProfitTon = expectedTonBack - amountInTon - GAS_BUFFER_TON - SERVICE_FEE_TON;
+    const estimatedProfitPercent = amountInTon > 0
+      ? (estimatedProfitTon / amountInTon) * 100
+      : 0;
 
     return res.json({
       ok: true,
@@ -588,9 +608,15 @@ app.get("/api/quote/roundtrip", async (req, res) => {
       sellDex,
       buyPrice: +buyPrice.toFixed(8),
       sellPrice: +sellPrice.toFixed(8),
+      rawSpreadPercent: +rawSpreadPercent.toFixed(2),
       expectedTokenOut: +expectedTokenOut.toFixed(6),
       expectedTonBack: +expectedTonBack.toFixed(6),
+      dexFeeTon: +dexFeeTon.toFixed(3),
+      gasFeeTon: +GAS_BUFFER_TON.toFixed(3),
+      serviceFeeTon: +SERVICE_FEE_TON.toFixed(3),
+      serviceFeeWallet: SERVICE_FEE_WALLET,
       estimatedProfitTon: +estimatedProfitTon.toFixed(3),
+      estimatedProfitPercent: +estimatedProfitPercent.toFixed(2),
       canExecute: estimatedProfitTon > 0
     });
   } catch (error) {
