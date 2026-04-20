@@ -752,6 +752,124 @@ app.get("/api/tx/ston-buy", async (req, res) => {
   }
 });
 
+
+app.get("/api/tx/ston-sell", async (req, res) => {
+  try {
+    const pair = String(req.query.pair || "").trim();
+    const amount = Number(req.query.amount || 0);
+    const wallet = String(req.query.wallet || "").trim();
+
+    if (!pair) {
+      return res.status(400).json({
+        ok: false,
+        error: "pair is required"
+      });
+    }
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        ok: false,
+        error: "amount must be greater than 0"
+      });
+    }
+
+    if (!wallet) {
+      return res.status(400).json({
+        ok: false,
+        error: "wallet is required"
+      });
+    }
+
+    const pairCfgBase = SWAP_CONFIG.pairs.find((p) => p.pair === pair);
+
+    if (!pairCfgBase) {
+      return res.status(404).json({
+        ok: false,
+        error: "pair not found in swap_config"
+      });
+    }
+
+    if (String(pairCfgBase.baseSymbol || "").toUpperCase() !== "TON") {
+      return res.status(400).json({
+        ok: false,
+        error: "only jetton -> TON sell is supported in this step"
+      });
+    }
+
+    const { StonApiClient } = require("@ston-fi/api");
+    const { dexFactory, Client } = require("@ston-fi/sdk");
+
+    const apiClient = new StonApiClient();
+
+    const offerUnits = BigInt(
+      Math.floor(Number(amount) * Math.pow(10, pairCfgBase.quoteDecimals))
+    ).toString();
+
+    const simulationResult = await apiClient.simulateSwap({
+      offerAddress: pairCfgBase.quoteAddress,
+      askAddress: pairCfgBase.baseAddress || "ton",
+      offerUnits,
+      slippageTolerance: "0.01"
+    });
+
+    const { router: routerInfo } = simulationResult;
+
+    if (!routerInfo?.address || !routerInfo?.ptonMasterAddress) {
+      return res.status(500).json({
+        ok: false,
+        error: "router info missing in simulation result"
+      });
+    }
+
+    const tonApiClient = new Client({
+      endpoint: STON_SDK_RPC_ENDPOINT
+    });
+
+    const dexContracts = dexFactory(routerInfo);
+    const router = tonApiClient.open(
+      dexContracts.Router.create(routerInfo.address)
+    );
+    const proxyTon = dexContracts.pTON.create(routerInfo.ptonMasterAddress);
+
+    const txParams = await router.getSwapJettonToTonTxParams({
+      userWalletAddress: wallet,
+      offerJettonAddress: pairCfgBase.quoteAddress,
+      offerAmount: simulationResult.offerUnits,
+      minAskAmount: simulationResult.minAskUnits,
+      proxyTon,
+      referralAddress: SERVICE_FEE_WALLET,
+      referralValue: STON_REFERRAL_BPS
+    });
+
+    return res.json({
+      ok: true,
+      step: "STON_SELL",
+      pair,
+      amountInJetton: amount,
+      wallet,
+      referralAddress: SERVICE_FEE_WALLET,
+      referralValue: STON_REFERRAL_BPS,
+      routerAddress: routerInfo.address,
+      ptonMasterAddress: routerInfo.ptonMasterAddress,
+      simulation: {
+        offerUnits: simulationResult.offerUnits,
+        minAskUnits: simulationResult.minAskUnits,
+        askAddress: simulationResult.askAddress
+      },
+      tonConnectMessage: {
+        address: txParams.to.toString(),
+        amount: txParams.value.toString(),
+        payload: txParams.body?.toBoc().toString("base64") || null
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      error: error.message || "ston sell tx build failed"
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log("Server started on port", PORT);
 });
