@@ -1,6 +1,4 @@
-// FORCE REDEPLOY 123
 // AUTO_SCANNER_FORCE_REDEPLOY_002
-console.log("AUTO_SCANNER_RUNTIME_MARKER_003");
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -329,13 +327,7 @@ app.get("/api/check", (_req, res) => {
     cacheSource: scannerCache.source
   });
 });
-app.get("/api/check2", (_req, res) => {
-res.json({
-ok: true,
-marker: "CHECK2_NEW_CODE",
-time: new Date().toISOString()
-});
-});
+
 app.get("/api/debug/assets", async (_req, res) => {
   try {
     const assets = await getStonAssets();
@@ -454,7 +446,6 @@ setInterval(() => {
   });
 }, REFRESH_INTERVAL_MS);
 
-
 app.get("/api/quote/roundtrip", async (req, res) => {
   try {
     const pair = String(req.query.pair || "").trim();
@@ -550,7 +541,6 @@ app.get("/api/quote/roundtrip", async (req, res) => {
     });
   }
 });
-
 
 app.get("/api/tx/ston-buy", async (req, res) => {
   try {
@@ -673,7 +663,6 @@ app.get("/api/tx/ston-buy", async (req, res) => {
     });
   }
 });
-
 
 app.get("/api/tx/ston-sell", async (req, res) => {
   try {
