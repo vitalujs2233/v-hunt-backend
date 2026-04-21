@@ -265,15 +265,12 @@ async function getDedustQuote(pairCfg) {
 }
 
 async function buildLiveDeals() {
-  const deals = await scanMarkets({
-    getStonQuote,
-    getDedustQuote
-  });
+const deals = await scanMarkets();
 
-  return deals.map((deal, index) => ({
-    id: index + 1,
-    ...deal
-  }));
+return deals.map((deal, index) => ({
+id: index + 1,
+...deal
+}));
 }
 
 async function refreshScannerCache() {
@@ -283,8 +280,8 @@ async function refreshScannerCache() {
   try {
     const deals = await buildLiveDeals();
 
-    scannerCache.deals = deals.length ? deals : buildFallbackDeals();
-    scannerCache.source = deals.length ? "SCANNER-LIVE-V3-CACHED" : "FALLBACK-DYNAMIC";
+    scannerCache.deals = deals;
+    scannerCache.source = "SCANNER-LIVE-V3-CACHED";
     scannerCache.updatedAt = Date.now();
     scannerCache.lastError = null;
   } catch (error) {
@@ -292,8 +289,8 @@ async function refreshScannerCache() {
     scannerCache.lastError = error.message || "refresh failed";
 
     if (!scannerCache.deals.length) {
-      scannerCache.deals = buildFallbackDeals();
-      scannerCache.source = "FALLBACK-DYNAMIC";
+      scannerCache.deals = [];
+      scannerCache.source = "SCANNER-LIVE-V3-CACHED";
       scannerCache.updatedAt = Date.now();
     }
   } finally {
