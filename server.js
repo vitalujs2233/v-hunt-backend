@@ -12,7 +12,7 @@ const {
   ReadinessStatus
 } = require("@dedust/sdk");
 const { scanDeals } = require("./scanner");
-
+const { scanMarkets } = require("./auto_scanner");
 const app = express();
 
 app.use(cors());
