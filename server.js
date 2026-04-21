@@ -265,18 +265,12 @@ async function getDedustQuote(pairCfg) {
 }
 
 async function buildLiveDeals() {
-  const deals = await scanDeals({
-    getStonQuote,
-    getDedustQuote,
-    dexFeeRate: DEX_FEE_RATE,
-    gasBufferTon: GAS_BUFFER_TON,
-    serviceFeeTon: SERVICE_FEE_TON
-  });
+const deals = await scanMarkets();
 
-  return deals.map((deal, index) => ({
-    id: index + 1,
-    ...deal
-  }));
+return deals.map((deal, index) => ({
+id: index + 1,
+...deal
+}));
 }
 
 async function refreshScannerCache() {
