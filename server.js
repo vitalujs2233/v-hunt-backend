@@ -1,4 +1,3 @@
-// AUTO_SCANNER_FORCE_REDEPLOY_002
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
@@ -12,7 +11,7 @@ const {
   PoolType,
   ReadinessStatus
 } = require("@dedust/sdk");
-const { scanMarkets } = require("./auto_scanner");
+
 const app = express();
 
 app.use(cors());
@@ -265,15 +264,103 @@ async function getDedustQuote(pairCfg) {
 }
 
 async function buildLiveDeals() {
-  const deals = await scanMarkets({
-    getStonQuote,
-    getDedustQuote
-  });
+  const pairResults = await Promise.all(
+    SWAP_CONFIG.pairs.map(async (pairCfg) => {
+      const ston = await getStonQuote(pairCfg);
+      const dedust = await getDedustQuote(pairCfg);
+      const tradeAmountTon = Number(pairCfg.amountInBase || 10);
 
-  return deals.map((deal, index) => ({
-    id: index + 1,
-    ...deal
-  }));
+      if (ston?.ok && dedust?.ok && dedust?.price) {
+        let buyDex = "STON";
+        let sellDex = "DeDust";
+        let buyPrice = ston.price;
+        let sellPrice = dedust.price;
+
+        if (dedust.price < ston.price) {
+          buyDex = "DeDust";
+          sellDex = "STON";
+          buyPrice = dedust.price;
+          sellPrice = ston.price;
+        }
+
+        const rawSpreadPercent = ((sellPrice - buyPrice) / buyPrice) * 100;
+
+        const expectedTokenOut = tradeAmountTon * buyPrice * (1 - DEX_FEE_RATE);
+        const expectedTonBack = (expectedTokenOut / sellPrice) * (1 - DEX_FEE_RATE);
+        const dexFeeTon = tradeAmountTon * DEX_FEE_RATE * 2;
+        const estimatedProfitTon = expectedTonBack - tradeAmountTon - GAS_BUFFER_TON - SERVICE_FEE_TON;
+        const netProfitPercent = tradeAmountTon > 0
+          ? (estimatedProfitTon / tradeAmountTon) * 100
+          : 0;
+
+        return {
+          pair: pairCfg.pair,
+          deal: {
+            pair: pairCfg.pair,
+            buyDex,
+            sellDex,
+            buyPrice: +buyPrice.toFixed(8),
+            sellPrice: +sellPrice.toFixed(8),
+            rawSpreadPercent: +rawSpreadPercent.toFixed(2),
+            grossSpreadPercent: +rawSpreadPercent.toFixed(2),
+            netSpreadPercent: +netProfitPercent.toFixed(2),
+            expectedTokenOut: +expectedTokenOut.toFixed(6),
+            expectedTonBack: +expectedTonBack.toFixed(6),
+            dexFeeTon: +dexFeeTon.toFixed(3),
+            gasFeeTon: +GAS_BUFFER_TON.toFixed(3),
+            serviceFeeTon: +SERVICE_FEE_TON.toFixed(3),
+            serviceFeeWallet: SERVICE_FEE_WALLET,
+            estimatedProfitTon: +estimatedProfitTon.toFixed(3),
+            canExecute: estimatedProfitTon > 0,
+            verified: estimatedProfitTon > 0,
+            risk: estimatedProfitTon > 0.15 ? "low" : estimatedProfitTon > 0.03 ? "medium" : "high"
+          }
+        };
+      }
+
+      if (ston?.ok) {
+        const grossSpreadPercent = dedust?.price
+          ? (((dedust.price - ston.price) / ston.price) * 100)
+          : 0;
+        const netSpreadPercent = dedust?.price
+          ? Math.max(grossSpreadPercent - 0.35, 0)
+          : 0;
+        const estimatedProfitTon = dedust?.price
+          ? (netSpreadPercent / 100) * tradeAmountTon
+          : 0;
+
+        return {
+          pair: pairCfg.pair,
+          deal: {
+            pair: pairCfg.pair,
+            buyDex: "STON",
+            sellDex: dedust?.ok ? "DeDust" : "—",
+            buyPrice: +ston.price.toFixed(8),
+            sellPrice: dedust?.price ? +dedust.price.toFixed(8) : +ston.price.toFixed(8),
+            grossSpreadPercent: +grossSpreadPercent.toFixed(2),
+            netSpreadPercent: +netSpreadPercent.toFixed(2),
+            estimatedProfitTon: +estimatedProfitTon.toFixed(3),
+            verified: true,
+            risk: "low",
+            note: dedust?.ok
+              ? "STON + DeDust real quotes loaded"
+              : "STON real quote ok, DeDust quote pending"
+          }
+        };
+      }
+
+      return null;
+    })
+  );
+
+  const deals = pairResults
+    .filter(Boolean)
+    .map((item, index) => ({
+      id: index + 1,
+      ...item.deal
+    }));
+
+  return deals;
 }
 
 async function refreshScannerCache() {
@@ -283,8 +370,8 @@ async function refreshScannerCache() {
   try {
     const deals = await buildLiveDeals();
 
-    scannerCache.deals = deals;
-    scannerCache.source = "SCANNER-LIVE-V3-CACHED";
+    scannerCache.deals = deals.length ? deals : buildFallbackDeals();
+    scannerCache.source = deals.length ? "SCANNER-LIVE-V3-CACHED" : "FALLBACK-DYNAMIC";
     scannerCache.updatedAt = Date.now();
     scannerCache.lastError = null;
   } catch (error) {
@@ -292,8 +379,8 @@ async function refreshScannerCache() {
     scannerCache.lastError = error.message || "refresh failed";
 
     if (!scannerCache.deals.length) {
-      scannerCache.deals = [];
-      scannerCache.source = "SCANNER-LIVE-V3-CACHED";
+      scannerCache.deals = buildFallbackDeals();
+      scannerCache.source = "FALLBACK-DYNAMIC";
       scannerCache.updatedAt = Date.now();
     }
   } finally {
@@ -320,7 +407,6 @@ app.get("/api/check", (_req, res) => {
   res.json({
     ok: true,
     message: "Backend работает",
-    build: "AUTO_SCANNER_FIX_001",
     time: new Date().toISOString(),
     cacheAgeMs: getCacheAgeMs(),
     cacheDeals: scannerCache.deals.length,
@@ -446,6 +532,7 @@ setInterval(() => {
   });
 }, REFRESH_INTERVAL_MS);
 
+
 app.get("/api/quote/roundtrip", async (req, res) => {
   try {
     const pair = String(req.query.pair || "").trim();
@@ -541,6 +628,7 @@ app.get("/api/quote/roundtrip", async (req, res) => {
     });
   }
 });
+
 
 app.get("/api/tx/ston-buy", async (req, res) => {
   try {
@@ -663,6 +751,7 @@ app.get("/api/tx/ston-buy", async (req, res) => {
     });
   }
 });
+
 
 app.get("/api/tx/ston-sell", async (req, res) => {
   try {
