@@ -329,7 +329,13 @@ app.get("/api/check", (_req, res) => {
     cacheSource: scannerCache.source
   });
 });
-
+app.get("/api/check2", (_req, res) => {
+res.json({
+ok: true,
+marker: "CHECK2_NEW_CODE",
+time: new Date().toISOString()
+});
+});
 app.get("/api/debug/assets", async (_req, res) => {
   try {
     const assets = await getStonAssets();
