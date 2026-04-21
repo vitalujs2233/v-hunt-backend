@@ -11,7 +11,6 @@ const {
   PoolType,
   ReadinessStatus
 } = require("@dedust/sdk");
-const { scanDeals } = require("./scanner");
 const { scanMarkets } = require("./auto_scanner");
 const app = express();
 
@@ -265,12 +264,15 @@ async function getDedustQuote(pairCfg) {
 }
 
 async function buildLiveDeals() {
-const deals = await scanMarkets();
+  const deals = await scanMarkets({
+    getStonQuote,
+    getDedustQuote
+  });
 
-return deals.map((deal, index) => ({
-id: index + 1,
-...deal
-}));
+  return deals.map((deal, index) => ({
+    id: index + 1,
+    ...deal
+  }));
 }
 
 async function refreshScannerCache() {
@@ -317,6 +319,7 @@ app.get("/api/check", (_req, res) => {
   res.json({
     ok: true,
     message: "Backend работает",
+    build: "AUTO_SCANNER_FIX_001",
     time: new Date().toISOString(),
     cacheAgeMs: getCacheAgeMs(),
     cacheDeals: scannerCache.deals.length,
