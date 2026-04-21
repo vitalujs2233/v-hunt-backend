@@ -1,0 +1,12 @@
+module.exports = [
+{
+pair: "TON/USDT",
+baseSymbol: "TON",
+quoteSymbol: "USDT",
+baseAddress: "TON",
+quoteAddress: "EQCxE6mUtQJKFn6Qb8S0g6f8qX2HFqRSbVSSMzdEar3NofM2",
+baseDecimals: 9,
+quoteDecimals: 6,
+amountInBase: "10"
+}
+];
