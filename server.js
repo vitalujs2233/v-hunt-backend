@@ -265,12 +265,15 @@ async function getDedustQuote(pairCfg) {
 }
 
 async function buildLiveDeals() {
-const deals = await scanMarkets();
+  const deals = await scanMarkets({
+    getStonQuote,
+    getDedustQuote
+  });
 
-return deals.map((deal, index) => ({
-id: index + 1,
-...deal
-}));
+  return deals.map((deal, index) => ({
+    id: index + 1,
+    ...deal
+  }));
 }
 
 async function refreshScannerCache() {
