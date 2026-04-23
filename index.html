@@ -3,106 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>V-HUNT | Crypto Hunter</title>
+<title>V-HUNT</title>
+<!-- Подключаем стили напрямую для надежности -->
 <script src="https://tailwindcss.com"></script>
 <script src="https://unpkg.com"></script>
 <style>
-@import url('https://googleapis.com');
-body { font-family: 'Inter', sans-serif; background-color: #050505; color: white; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
-.glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
-.hunt-gradient { background: linear-gradient(135deg, #00ff41 0%, #008f11 100%); }
+/* Базовый "дорогой" фон сразу */
+body {
+background-color: #050505 !important;
+color: white !important;
+font-family: sans-serif;
+margin: 0;
+padding: 0;
+}
+.glass-card {
+background: rgba(255, 255, 255, 0.05);
+backdrop-filter: blur(10px);
+border-radius: 20px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.green-glow {
+box-shadow: 0 0 20px rgba(0, 255, 65, 0.15);
+}
 .no-scrollbar::-webkit-scrollbar { display: none; }
-.active-tab { color: #00ff41; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 </style>
 </head>
-<body class="pb-24">
+<body class="pb-24 bg-black text-white">
 
 <!-- HEADER -->
-<header class="p-4 flex justify-between items-center sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-md">
-<div class="flex items-center gap-2">
-<div class="w-8 h-8 hunt-gradient rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(0,255,65,0.3)]">
-<i data-lucide="target" class="w-5 h-5 text-black"></i>
+<div class="p-6 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-50">
+<div>
+<h1 class="text-2xl font-black tracking-tighter uppercase">V-HUNT <span class="text-green-500">$</span></h1>
+<div id="status" class="text-[10px] text-gray-500 font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-gray-500 rounded-full animate-pulse"></span> CONNECTING TO API...
 </div>
-<h1 class="text-xl font-extrabold tracking-tighter">V-HUNT <span class="text-[#00ff41]">$</span></h1>
 </div>
-<div id="api-status" class="flex items-center gap-2 px-3 py-1 glass rounded-full text-[10px] font-bold text-gray-400">
-<span class="status-dot bg-gray-500"></span> API CONNECTING
+<div class="w-10 h-10 glass-card flex items-center justify-center">
+<i data-lucide="user" class="w-5 h-5"></i>
 </div>
-</header>
+</div>
 
-<!-- HOT HUNTS -->
-<section class="px-4 mb-8 mt-4">
-<h2 class="text-xs uppercase text-gray-500 font-bold mb-3 tracking-widest">Горячие цели</h2>
-<div id="hot-hunts-container" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-<!-- Заглушка пока грузятся данные -->
-<div class="min-w-[280px] p-5 glass rounded-3xl animate-pulse">
-<div class="h-10 w-10 bg-white/10 rounded-full mb-4"></div>
-<div class="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
-<div class="h-8 bg-white/10 rounded-xl w-full"></div>
+<!-- HOT HUNTS SLIDER -->
+<div class="px-6 mb-8">
+<h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Горячие цели</h2>
+<div class="flex gap-4 overflow-x-auto no-scrollbar">
+<!-- Card 1 -->
+<div class="min-w-[85%] p-6 glass-card green-glow relative overflow-hidden bg-gradient-to-br from-green-500/10 to-transparent">
+<div class="flex justify-between items-start mb-6">
+<div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center font-bold">BNB</div>
+<span class="bg-green-500 text-black text-[10px] font-extrabold px-2 py-1 rounded-md">LIVE NOW</span>
+</div>
+<div class="text-xl font-bold mb-1">Binance Listing</div>
+<div class="text-sm text-gray-400 mb-4">New Token Alert</div>
+<button class="w-full py-3 bg-green-500 text-black font-black rounded-xl text-sm active:scale-95 transition-all">ВЗЯТЬ В ПРИЦЕЛ</button>
 </div>
 </div>
-</section>
+</div>
 
-<!-- EXCHANGES GRID -->
-<section class="px-4 mb-8">
-<h2 class="text-xs uppercase text-gray-500 font-bold mb-3 tracking-widest">Биржи под прицелом</h2>
-<div class="grid grid-cols-2 gap-3">
-<div onclick="loadExchanges('binance')" class="p-4 glass rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform border-b-2 border-green-500/0 hover:border-green-500/50">
-<div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-yellow-500"><i data-lucide="layers"></i></div>
-<span class="font-bold text-sm">Binance</span>
+<!-- EXCHANGES -->
+<div class="px-6 mb-8">
+<h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Биржи</h2>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-6 glass-card flex flex-col items-center gap-3 active:scale-95 transition-all">
+<i data-lucide="layers" class="text-yellow-500 w-8 h-8"></i>
+<span class="font-bold">Binance</span>
 </div>
-<div onclick="loadExchanges('bybit')" class="p-4 glass rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform border-b-2 border-green-500/0 hover:border-green-500/50">
-<div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-orange-500"><i data-lucide="shield-check"></i></div>
-<span class="font-bold text-sm">ByBit</span>
+<div class="p-6 glass-card flex flex-col items-center gap-3 active:scale-95 transition-all border-b-2 border-green-500">
+<i data-lucide="shield-check" class="text-orange-500 w-8 h-8"></i>
+<span class="font-bold">ByBit</span>
 </div>
 </div>
-</section>
+</div>
 
-<!-- BOTTOM NAV -->
-<nav class="fixed bottom-0 left-0 right-0 h-20 glass border-t border-white/5 px-6 flex justify-between items-center z-50">
-<div class="flex flex-col items-center gap-1 active-tab"><i data-lucide="radar" class="w-6 h-6"></i><span class="text-[10px] font-bold">HUNT</span></div>
-<div class="flex flex-col items-center gap-1 text-gray-500"><i data-lucide="bell" class="w-6 h-6"></i><span class="text-[10px] font-bold">ALERTS</span></div>
-<div class="flex flex-col items-center gap-1 text-gray-500"><i data-lucide="gem" class="w-6 h-6"></i><span class="text-[10px] font-bold">PREMIUM</span></div>
-</nav>
+<!-- TAB BAR -->
+<div class="fixed bottom-0 w-full h-20 bg-black/90 backdrop-blur-xl border-t border-white/5 flex justify-around items-center px-4 z-50">
+<div class="flex flex-col items-center gap-1 text-green-500">
+<i data-lucide="radar" class="w-6 h-6"></i>
+<span class="text-[10px] font-bold">HUNT</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-gray-600">
+<i data-lucide="bell" class="w-6 h-6"></i>
+<span class="text-[10px] font-bold">ALERTS</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-gray-600">
+<i data-lucide="gem" class="w-6 h-6"></i>
+<span class="text-[10px] font-bold">PREMIUM</span>
+</div>
+</div>
 
 <script>
-const API_URL = 'https://v-hunt-backend-production.up.railway.app';
-
-// 1. Проверка связи с бэкендом
-async function checkStatus() {
-const statusLabel = document.getElementById('api-status');
-try {
-const response = await fetch(`${API_URL}/status`); // замени на свой эндпоинт, если он другой
-if (response.ok) {
-statusLabel.innerHTML = '<span class="status-dot bg-green-500"></span> API ONLINE';
-statusLabel.classList.add('text-green-500');
-}
-} catch (e) {
-statusLabel.innerHTML = '<span class="status-dot bg-red-500"></span> API OFFLINE';
-statusLabel.classList.add('text-red-500');
-}
-}
-
-// 2. Функция получения листингов (пример)
-async function fetchListings() {
-try {
-const response = await fetch(`${API_URL}/listings`);
-const data = await response.json();
-renderListings(data);
-} catch (e) {
-console.error("Ошибка загрузки листингов", e);
-}
-}
-
-function renderListings(listings) {
-const container = document.getElementById('hot-hunts-container');
-// Здесь будет логика отрисовки карточек из данных твоего API
-}
-
-// Инициализация
 lucide.createIcons();
-checkStatus();
+
+// Тест твоего бэкенда
+const API = 'https://railway.app';
+fetch(API + '/status').then(res => {
+if(res.ok) document.getElementById('status').innerHTML = '<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> API ONLINE';
+}).catch(e => {
+document.getElementById('status').innerHTML = '<span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span> SERVER ERROR';
+});
 </script>
 </body>
 </html>
