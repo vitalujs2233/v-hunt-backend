@@ -7,8 +7,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// если index.html лежит рядом с server.js
 app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 8080;
