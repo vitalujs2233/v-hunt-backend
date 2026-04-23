@@ -594,8 +594,8 @@
 
     <section id="scanner" class="section active">
       <div class="section-title-row">
-        <h2 class="section-title">Live Scanner</h2>
-        <div class="mini-tag" id="scannerDealsCount">0 deals live</div>
+        <h2 class="section-title">Live Listings</h2>
+        <div class="mini-tag" id="scannerDealsCount">0 listings live</div>
       </div>
 
       <div class="card" id="scannerLoadingCard">
@@ -825,7 +825,7 @@
         const prefix = totalProfitTon >= 0 ? '+' : '';
         profitEl.textContent = prefix + totalProfitTon.toFixed(3) + ' TON';
       }
-      if (countEl) countEl.textContent = count + ' deals live';
+      if (countEl) countEl.textContent = count + ' listings live';
     }
 
     function handleAmountInput(pair, inputId, profitId, badgeId, statusId, buttonId, feesId, cardId){
@@ -1396,7 +1396,7 @@
           loadingCard.innerHTML = '<div class="muted">Обновление котировок с бирж...</div>';
         }
 
-        const response = await fetch(BACKEND_URL + '/api/scanner/live2?t=' + Date.now());
+        const response = await fetch(BACKEND_URL + '/api/listings/live?t=' + Date.now());
         if (!response.ok) throw new Error('Scanner API ' + response.status);
 
         const data = await response.json();
@@ -1411,8 +1411,8 @@
         if (scannerSection) {
           scannerSection.innerHTML = `
             <div class="section-title-row">
-              <h2 class="section-title">Live Scanner</h2>
-              <div class="mini-tag" id="scannerDealsCount">0 deals live</div>
+              <h2 class="section-title">Live Listings</h2>
+              <div class="mini-tag" id="scannerDealsCount">0 listings live</div>
             </div>
             <div class="card">
               <div class="muted">Ошибка загрузки реальных данных с бирж</div>
@@ -1434,8 +1434,8 @@
 
       scannerSection.innerHTML = `
         <div class="section-title-row">
-          <h2 class="section-title">Live Scanner</h2>
-          <div class="mini-tag" id="scannerDealsCount">${deals.length} deals live</div>
+          <h2 class="section-title">Live Listings</h2>
+          <div class="mini-tag" id="scannerDealsCount">${deals.length} listings live</div>
         </div>
       `;
 
