@@ -3,183 +3,847 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>V-HUNT</title>
+  <title>V-HUNT — Listing Scanner</title>
+  <meta name="theme-color" content="#090b10" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    body{margin:0;font-family:Arial,sans-serif;background:#08101b;color:#fff}
-    .wrap{padding:16px 16px 100px}
-    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .title{font-size:34px;font-weight:900}
-    .sub{color:#9aa4b2;margin-top:4px}
-    .ticker{overflow:hidden;white-space:nowrap;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0;margin:14px 0}
-    .ticker span{display:inline-block;padding-left:100%;animation:t 16s linear infinite}
-    @keyframes t{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-    .hero{background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px;margin-bottom:16px}
-    .hero .mark{display:inline-block;padding:6px 10px;border-radius:999px;background:#16304f;color:#8fd1ff;font-size:12px;font-weight:700}
-    .hero h2{margin:14px 0 8px;font-size:26px;line-height:1.1}
-    .hero p{margin:0;color:#aab4c3;line-height:1.45}
-    .section-title{font-size:22px;font-weight:900;margin:18px 0 10px}
-    .slider{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px}
-    .slider::-webkit-scrollbar{display:none}
-    .exchange{min-width:150px;background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:16px;cursor:pointer}
-    .icon{width:52px;height:52px;border-radius:16px;background:#16304f;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;margin-bottom:10px}
-    .exchange-name{font-size:20px;font-weight:900}
-    .exchange-sub{font-size:12px;color:#aab4c3;margin-top:4px}
-    .feed{background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;margin-bottom:10px}
-    .screen{display:none}
-    .screen.active{display:block}
-    .back{display:inline-block;background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;margin-bottom:12px;cursor:pointer}
-    .ex-head{display:flex;gap:12px;align-items:center;margin-bottom:14px}
-    .big-icon{width:62px;height:62px;border-radius:18px;background:#16304f;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900}
-    .indicators{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-    .box{background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:12px}
-    .label{font-size:11px;color:#93a0b1;text-transform:uppercase;margin-bottom:6px}
-    .value{font-size:18px;font-weight:900}
-    .listing{background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;margin-bottom:12px}
-    .listing h3{margin:0 0 8px;font-size:18px;line-height:1.25}
-    .muted{color:#9aa4b2;font-size:13px}
-    .row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-    .btn{display:block;text-align:center;background:#1b4f7f;color:#fff;text-decoration:none;padding:12px;border-radius:14px;margin-top:12px;font-weight:800}
-    .tabs{position:fixed;left:12px;right:12px;bottom:12px;background:#0d1522;border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-    .tab{padding:12px 8px;text-align:center;border-radius:16px;color:#9aa4b2}
-    .tab.active{background:#101826;color:#42b4ff}
+    :root{
+      --bg:#090b10;
+      --bg-soft:#10141d;
+      --card:rgba(19,24,33,.88);
+      --card-2:rgba(15,19,27,.92);
+      --line:rgba(255,255,255,.08);
+      --text:#ffffff;
+      --muted:#8e9aab;
+      --primary:#00a3ff;
+      --primary-soft:rgba(0,163,255,.16);
+      --green:#1edc8b;
+      --danger:#ff5d73;
+      --shadow:0 18px 40px rgba(0,0,0,.35);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{
+      margin:0;
+      padding:0;
+      min-height:100%;
+      background:
+        radial-gradient(circle at top left, rgba(0,163,255,.16), transparent 28%),
+        radial-gradient(circle at top right, rgba(30,220,139,.10), transparent 22%),
+        linear-gradient(180deg, #06080d 0%, #090b10 45%, #0b1017 100%);
+      color:var(--text);
+      font-family:"Inter", system-ui, sans-serif;
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.15;
+      background:
+        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size:30px 30px;
+    }
+
+    .app{
+      position:relative;
+      z-index:1;
+      min-height:100vh;
+      padding:14px 14px 28px;
+    }
+
+    .shell{
+      max-width:760px;
+      margin:0 auto;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+
+    .logo{
+      width:44px;
+      height:44px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+      background:linear-gradient(135deg, #0f2741, #0d7ed1 58%, #18c18f);
+      box-shadow:0 10px 26px rgba(0,163,255,.24);
+      border:1px solid rgba(255,255,255,.14);
+    }
+
+    .brand-title{
+      font-size:20px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:.02em;
+    }
+
+    .brand-sub{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:11px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+
+    .user-chip{
+      max-width:140px;
+      padding:8px 12px;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      color:#d8e4f3;
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      backdrop-filter:blur(16px);
+    }
+
+    .hero{
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:28px;
+      padding:18px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(18px);
+      margin-bottom:16px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:auto -40px -40px auto;
+      width:140px;
+      height:140px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,163,255,.26), transparent 72%);
+      filter:blur(10px);
+    }
+
+    .hero-label{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#dce9f7;
+      font-size:11px;
+      font-weight:800;
+      margin-bottom:14px;
+    }
+
+    .dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--green);
+      box-shadow:0 0 0 0 rgba(30,220,139,.55);
+      animation:pulse 1.7s infinite;
+    }
+
+    @keyframes pulse{
+      0%{box-shadow:0 0 0 0 rgba(30,220,139,.45)}
+      70%{box-shadow:0 0 0 10px rgba(30,220,139,0)}
+      100%{box-shadow:0 0 0 0 rgba(30,220,139,0)}
+    }
+
+    .hero h1{
+      margin:0;
+      font-size:28px;
+      line-height:1.05;
+      letter-spacing:-.03em;
+      max-width:520px;
+    }
+
+    .hero p{
+      margin:12px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.55;
+      max-width:560px;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .stat{
+      padding:12px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .stat-label{
+      color:var(--muted);
+      font-size:11px;
+      margin-bottom:6px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .stat-value{
+      font-size:18px;
+      font-weight:800;
+    }
+
+    .panel{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(16px);
+      overflow:hidden;
+    }
+
+    .panel-head{
+      padding:16px 16px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .panel-title{
+      font-size:17px;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+
+    .panel-sub{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:4px;
+    }
+
+    .badge{
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.07);
+      color:#dce8f5;
+      font-size:11px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .exchange-strip{
+      display:flex;
+      gap:12px;
+      overflow-x:auto;
+      padding:4px 16px 16px;
+      scroll-snap-type:x proximity;
+    }
+
+    .exchange-strip::-webkit-scrollbar{display:none}
+
+    .exchange-card{
+      min-width:170px;
+      scroll-snap-align:start;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      padding:14px;
+      cursor:pointer;
+      transition:transform .18s ease, border-color .18s ease, background .18s ease;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+    }
+
+    .exchange-card.active{
+      border-color:rgba(0,163,255,.34);
+      background:linear-gradient(180deg, rgba(0,163,255,.14), rgba(255,255,255,.03));
+      transform:translateY(-2px);
+    }
+
+    .exchange-logo{
+      width:46px;
+      height:46px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      font-weight:900;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.08);
+      margin-bottom:12px;
+    }
+
+    .exchange-name{
+      font-size:16px;
+      font-weight:800;
+    }
+
+    .exchange-desc{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:5px;
+      min-height:32px;
+      line-height:1.35;
+    }
+
+    .exchange-meta{
+      margin-top:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      font-size:11px;
+      color:#dce7f3;
+    }
+
+    .details{
+      margin-top:16px;
+      padding:16px;
+    }
+
+    .details-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .details-brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+
+    .details-logo{
+      width:54px;
+      height:54px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+      font-weight:900;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      flex-shrink:0;
+    }
+
+    .details-name{
+      font-size:22px;
+      font-weight:900;
+      line-height:1.05;
+    }
+
+    .details-note{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:6px;
+      line-height:1.45;
+    }
+
+    .refresh-btn{
+      border:none;
+      background:var(--primary-soft);
+      color:#dff2ff;
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      border:1px solid rgba(0,163,255,.18);
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .kpi{
+      padding:12px;
+      border-radius:18px;
+      background:var(--card-2);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .kpi-label{
+      color:var(--muted);
+      font-size:11px;
+      margin-bottom:6px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+    }
+
+    .kpi-value{
+      font-size:18px;
+      font-weight:800;
+      word-break:break-word;
+    }
+
+    .listings{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .listing-card{
+      padding:15px;
+      border-radius:20px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.025));
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .listing-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .listing-title{
+      font-size:15px;
+      font-weight:800;
+      line-height:1.4;
+    }
+
+    .listing-desc{
+      margin-top:7px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .listing-status{
+      flex-shrink:0;
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      border:1px solid transparent;
+    }
+
+    .status-live{
+      background:rgba(30,220,139,.12);
+      color:#9ef1c8;
+      border-color:rgba(30,220,139,.18);
+    }
+
+    .status-upcoming{
+      background:rgba(0,163,255,.12);
+      color:#98ddff;
+      border-color:rgba(0,163,255,.18);
+    }
+
+    .listing-grid{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:9px;
+      margin-top:12px;
+    }
+
+    .cell{
+      padding:10px;
+      border-radius:15px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .cell-label{
+      color:var(--muted);
+      font-size:10px;
+      margin-bottom:5px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
+    }
+
+    .cell-value{
+      font-size:12px;
+      font-weight:800;
+      line-height:1.4;
+      word-break:break-word;
+    }
+
+    .announcement-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:15px;
+      text-decoration:none;
+      border:1px solid rgba(0,163,255,.18);
+      background:linear-gradient(135deg, #103152, #0c76c6 60%, #16b48b);
+      color:white;
+      font-weight:800;
+      font-size:12px;
+    }
+
+    .empty,
+    .loading,
+    .error{
+      padding:22px 16px;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    .footer-note{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+      line-height:1.5;
+    }
+
+    @media (max-width:640px){
+      .stats,
+      .kpis,
+      .listing-grid{
+        grid-template-columns:1fr;
+      }
+
+      .hero h1{font-size:24px}
+      .details-head{flex-direction:column}
+      .refresh-btn{width:100%}
+      .exchange-card{min-width:154px}
+    }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div id="homeScreen" class="screen active">
-    <div class="top">
-      <div>
-        <div class="title">V-HUNT</div>
-        <div class="sub">UI V4 EXCHANGE SLIDER</div>
-      </div>
-      <div>👤 Trader</div>
-    </div>
-
-    <div class="ticker"><span>НОВЫЕ ЛИСТИНГИ • СКАНЕР БИРЖ • V-HUNT • ГЛАВНЫЙ ЭКРАН • НОВЫЕ ЛИСТИНГИ • СКАНЕР БИРЖ •</span></div>
-
-    <div class="hero">
-      <div class="mark">НОВАЯ ВЕРСИЯ V4</div>
-      <h2>Главный экран V-HUNT</h2>
-      <p>Выбери биржу в свайпере ниже. После нажатия откроется отдельный экран с логотипом, индикаторами и списком листингов выбранной биржи.</p>
-    </div>
-
-    <div class="section-title">Биржи</div>
-    <div id="exchangeSlider" class="slider"></div>
-
-    <div class="section-title">Лента событий</div>
-    <div class="feed">V-HUNT показывает новые листинги по биржам на отдельных экранах.</div>
-    <div class="feed">Главный экран — это лицо проекта. Здесь только выбор биржи и лента событий.</div>
-  </div>
-
-  <div id="exchangeScreen" class="screen">
-    <div class="back" onclick="showHome()">← Назад</div>
-    <div class="ex-head">
-      <div id="bigIcon" class="big-icon">B</div>
-      <div>
-        <div id="exTitle" class="title" style="font-size:28px">BYBIT</div>
-        <div class="sub">Экран листингов биржи</div>
-      </div>
-    </div>
-
-    <div class="indicators">
-      <div class="box"><div class="label">Биржа</div><div id="indExchange" class="value">—</div></div>
-      <div class="box"><div class="label">Листинги</div><div id="indCount" class="value">0</div></div>
-      <div class="box"><div class="label">Статус</div><div class="value">LIVE</div></div>
-    </div>
-
-    <div id="listingsRoot"></div>
-  </div>
-</div>
-
-<div class="tabs">
-  <div class="tab active">Главная</div>
-  <div class="tab">Сеть</div>
-  <div class="tab">Wallet</div>
-  <div class="tab">Настройки</div>
-</div>
-
-<script>
-const API = "https://v-hunt-backend-production.up.railway.app/api/listings/live";
-let allListings = [];
-
-function iconFor(exchange){
-  const ex = String(exchange || "").toUpperCase();
-  if(ex === "BYBIT") return "B";
-  if(ex === "OKX") return "O";
-  if(ex === "BINANCE") return "BN";
-  return "EX";
-}
-
-function showHome(){
-  document.getElementById("exchangeScreen").classList.remove("active");
-  document.getElementById("homeScreen").classList.add("active");
-}
-
-function openExchange(exchange){
-  document.getElementById("homeScreen").classList.remove("active");
-  document.getElementById("exchangeScreen").classList.add("active");
-  document.getElementById("bigIcon").textContent = iconFor(exchange);
-  document.getElementById("exTitle").textContent = exchange;
-  document.getElementById("indExchange").textContent = exchange;
-
-  const list = allListings.filter(x => x.exchange === exchange);
-  document.getElementById("indCount").textContent = String(list.length);
-
-  const root = document.getElementById("listingsRoot");
-  if (!list.length){
-    root.innerHTML = '<div class="listing"><div class="muted">По этой бирже пока нет листингов.</div></div>';
-    return;
-  }
-
-  root.innerHTML = list.map(item => {
-    const dateText = item.publishedAt ? new Date(Number(item.publishedAt)).toLocaleString() : "—";
-    const symbol = item.symbol || "NEW";
-    const pair = item.pair || "—";
-    return `
-      <div class="listing">
-        <h3>${item.title || "New listing"}</h3>
-        <div class="muted">${item.description || "Официальное объявление биржи"}</div>
-        <div class="row">
-          <div class="box"><div class="label">Символ</div><div class="value">${symbol}</div></div>
-          <div class="box"><div class="label">Пара</div><div class="value">${pair}</div></div>
-          <div class="box"><div class="label">Дата</div><div class="value" style="font-size:14px">${dateText}</div></div>
+  <div class="app">
+    <div class="shell">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo">V</div>
+          <div>
+            <div class="brand-title">V-HUNT</div>
+            <div class="brand-sub">Listing Scanner</div>
+          </div>
         </div>
-        <a class="btn" href="${item.url || "#"}" target="_blank" rel="noopener noreferrer">Открыть announcement</a>
+        <div class="user-chip" id="userChip">Trader</div>
       </div>
-    `;
-  }).join("");
-}
 
-async function load(){
-  const slider = document.getElementById("exchangeSlider");
-  slider.innerHTML = '<div class="exchange"><div class="icon">...</div><div class="exchange-name">Загрузка</div><div class="exchange-sub">Подключаем биржи</div></div>';
+      <section class="hero">
+        <div class="hero-label"><span class="dot"></span> LIVE EXCHANGE MONITOR</div>
+        <h1>Новые листинги без старого мусора</h1>
+        <p>
+          Выбирай биржу свайпом, смотри свежие объявления и переходи к official announcement в один тап.
+          Интерфейс собран под Telegram mini app и заточен под скорость.
+        </p>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">Бирж</div>
+            <div class="stat-value" id="statExchanges">3</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Всего листингов</div>
+            <div class="stat-value" id="statListings">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Последнее обновление</div>
+            <div class="stat-value" id="statUpdated">—</div>
+          </div>
+        </div>
+      </section>
 
-  try{
-    const res = await fetch(API + "?t=" + Date.now());
-    const json = await res.json();
-    allListings = Array.isArray(json.data) ? json.data : [];
-    const exchanges = [...new Set(allListings.map(x => x.exchange).filter(Boolean))];
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Выбери биржу</div>
+            <div class="panel-sub">Горизонтальный свайпер без лишней информации</div>
+          </div>
+          <div class="badge" id="liveBadge">Loading...</div>
+        </div>
+        <div class="exchange-strip" id="exchangeStrip"></div>
+      </section>
 
-    if(!exchanges.length){
-      slider.innerHTML = '<div class="exchange"><div class="icon">!</div><div class="exchange-name">Нет данных</div><div class="exchange-sub">Биржи не пришли с backend</div></div>';
-      return;
+      <section class="panel details">
+        <div class="details-head">
+          <div class="details-brand">
+            <div class="details-logo" id="detailsLogo">B</div>
+            <div>
+              <div class="details-name" id="detailsName">Bybit</div>
+              <div class="details-note" id="detailsNote">Открываем отдельный экран биржи со списком листингов.</div>
+            </div>
+          </div>
+          <button class="refresh-btn" id="refreshBtn">Обновить</button>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <div class="kpi-label">Листингов</div>
+            <div class="kpi-value" id="kpiCount">0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Последний тикер</div>
+            <div class="kpi-value" id="kpiTicker">—</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Статус</div>
+            <div class="kpi-value" id="kpiStatus">Waiting</div>
+          </div>
+        </div>
+
+        <div class="listings" id="listingsContainer">
+          <div class="loading">Загрузка листингов...</div>
+        </div>
+      </section>
+
+      <div class="footer-note">
+        V-HUNT Listing Scanner • version 2.0 • anti-cache build
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    const API_URL = '/api/listings/live?t=' + Date.now();
+
+    const exchanges = [
+      { id: 'bybit', name: 'Bybit', logo: 'B', description: 'Рабочий источник из backend', accent: 'Live feed active' },
+      { id: 'okx', name: 'OKX', logo: 'O', description: 'Подготовлено под подключение', accent: 'Coming next' },
+      { id: 'binance', name: 'Binance', logo: 'BN', description: 'Подготовлено под подключение', accent: 'Coming next' }
+    ];
+
+    let liveListings = [];
+    let selectedExchange = 'bybit';
+
+    function initTelegram(){
+      if (!tg) return;
+      tg.ready();
+      tg.expand();
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        const name = user.username || [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Trader';
+        document.getElementById('userChip').textContent = name;
+      }
     }
 
-    slider.innerHTML = exchanges.map(exchange => `
-      <div class="exchange" onclick="openExchange('${exchange.replace(/'/g, "\'")}')">
-        <div class="icon">${iconFor(exchange)}</div>
-        <div class="exchange-name">${exchange}</div>
-        <div class="exchange-sub">Открыть экран биржи</div>
-      </div>
-    `).join("");
-  }catch(e){
-    slider.innerHTML = '<div class="exchange"><div class="icon">!</div><div class="exchange-name">Ошибка</div><div class="exchange-sub">Не удалось загрузить биржи</div></div>';
-  }
-}
+    function formatDate(dateInput){
+      if (!dateInput) return '—';
+      const date = new Date(dateInput);
+      if (isNaN(date.getTime())) return '—';
+      return date.toLocaleString('ru-RU');
+    }
 
-load();
-setInterval(load, 30000);
-</script>
+    function formatPublishedAt(value){
+      if (!value) return '—';
+      const numeric = Number(value);
+      if (!Number.isNaN(numeric) && numeric > 0) {
+        return new Date(numeric).toLocaleString('ru-RU');
+      }
+      return formatDate(value);
+    }
+
+    function getListingStatus(item){
+      const text = `${item.title || ''} ${item.description || ''}`.toLowerCase();
+      if (text.includes('perpetual') || text.includes('futures') || text.includes('live')) return 'LIVE';
+      return 'UPCOMING';
+    }
+
+    function getStatusClass(status){
+      return status === 'LIVE' ? 'status-live' : 'status-upcoming';
+    }
+
+    function extractSymbol(item){
+      if (item.symbol) return String(item.symbol).toUpperCase();
+      const text = `${item.title || ''} ${item.description || ''}`;
+      const pairMatch = text.match(/([A-Z0-9]{2,})\s*\/\s*USDT/i) || text.match(/([A-Z0-9]{2,})USDT/i);
+      if (pairMatch) return pairMatch[1].toUpperCase();
+      return 'NEW';
+    }
+
+    function extractPair(item){
+      if (item.pair) return item.pair;
+      const text = `${item.title || ''} ${item.description || ''}`;
+      const pairMatch = text.match(/([A-Z0-9]{2,})\s*\/\s*(USDT|USDC|BTC|ETH)/i);
+      if (pairMatch) return `${pairMatch[1].toUpperCase()}/${pairMatch[2].toUpperCase()}`;
+      const shortSymbol = extractSymbol(item);
+      return shortSymbol === 'NEW' ? '—' : `${shortSymbol}/USDT`;
+    }
+
+    function normalizeExchange(value){
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function getListingsForExchange(exchangeId){
+      return liveListings.filter(item => normalizeExchange(item.exchange || 'bybit') === exchangeId);
+    }
+
+    function renderExchangeStrip(){
+      const root = document.getElementById('exchangeStrip');
+      root.innerHTML = exchanges.map(exchange => {
+        const items = getListingsForExchange(exchange.id);
+        const active = exchange.id === selectedExchange ? 'active' : '';
+        return `
+          <div class="exchange-card ${active}" onclick="selectExchange('${exchange.id}')">
+            <div class="exchange-logo">${exchange.logo}</div>
+            <div class="exchange-name">${exchange.name}</div>
+            <div class="exchange-desc">${exchange.description}</div>
+            <div class="exchange-meta">
+              <span>${items.length} listings</span>
+              <span>${exchange.accent}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateTopStats(){
+      document.getElementById('statExchanges').textContent = String(exchanges.length);
+      document.getElementById('statListings').textContent = String(liveListings.length);
+      document.getElementById('statUpdated').textContent = formatDate(new Date());
+      document.getElementById('liveBadge').textContent = liveListings.length ? `${liveListings.length} live` : 'No data';
+    }
+
+    function renderSelectedExchange(){
+      const exchange = exchanges.find(item => item.id === selectedExchange) || exchanges[0];
+      const items = getListingsForExchange(exchange.id);
+      const latest = items[0];
+
+      document.getElementById('detailsLogo').textContent = exchange.logo;
+      document.getElementById('detailsName').textContent = exchange.name;
+      document.getElementById('detailsNote').textContent = exchange.description;
+      document.getElementById('kpiCount').textContent = String(items.length);
+      document.getElementById('kpiTicker').textContent = latest ? extractSymbol(latest) : '—';
+      document.getElementById('kpiStatus').textContent = items.length ? 'Active' : 'Waiting';
+
+      const root = document.getElementById('listingsContainer');
+      if (!items.length) {
+        root.innerHTML = `<div class="empty">Для ${exchange.name} пока нет доступных листингов в API.</div>`;
+        return;
+      }
+
+      root.innerHTML = items.map(item => {
+        const status = getListingStatus(item);
+        const title = item.title || 'New listing';
+        const description = item.description || 'Официальное объявление биржи';
+        const publishedAt = formatPublishedAt(item.publishedAt || item.date || item.time);
+        const pair = extractPair(item);
+        const symbol = extractSymbol(item);
+        const url = item.url || item.link || '#';
+
+        return `
+          <article class="listing-card">
+            <div class="listing-top">
+              <div>
+                <div class="listing-title">${title}</div>
+                <div class="listing-desc">${description}</div>
+              </div>
+              <div class="listing-status ${getStatusClass(status)}">${status}</div>
+            </div>
+
+            <div class="listing-grid">
+              <div class="cell">
+                <div class="cell-label">Exchange</div>
+                <div class="cell-value">${exchange.name}</div>
+              </div>
+              <div class="cell">
+                <div class="cell-label">Ticker</div>
+                <div class="cell-value">${symbol}</div>
+              </div>
+              <div class="cell">
+                <div class="cell-label">Pair</div>
+                <div class="cell-value">${pair}</div>
+              </div>
+              <div class="cell" style="grid-column: 1 / -1;">
+                <div class="cell-label">Published</div>
+                <div class="cell-value">${publishedAt}</div>
+              </div>
+            </div>
+
+            <a class="announcement-btn" href="${url}" target="_blank" rel="noopener noreferrer">Open announcement</a>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function selectExchange(exchangeId){
+      selectedExchange = exchangeId;
+      renderExchangeStrip();
+      renderSelectedExchange();
+      tg?.HapticFeedback?.selectionChanged?.();
+    }
+
+    async function loadListings(){
+      const root = document.getElementById('listingsContainer');
+      root.innerHTML = '<div class="loading">Загрузка листингов...</div>';
+      try {
+        const response = await fetch('/api/listings/live?t=' + Date.now(), {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('API ' + response.status);
+        }
+
+        const result = await response.json();
+        const data = Array.isArray(result?.data) ? result.data : [];
+        liveListings = data.map(item => ({
+          ...item,
+          exchange: item.exchange || 'bybit'
+        }));
+
+        updateTopStats();
+        renderExchangeStrip();
+        renderSelectedExchange();
+      } catch (error) {
+        console.error(error);
+        liveListings = [];
+        updateTopStats();
+        renderExchangeStrip();
+        root.innerHTML = '<div class="error">Не удалось загрузить листинги. Проверь backend, Railway deploy и кеш Telegram.</div>';
+      }
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      tg?.HapticFeedback?.impactOccurred?.('light');
+      loadListings();
+    });
+
+    initTelegram();
+    renderExchangeStrip();
+    renderSelectedExchange();
+    loadListings();
+    setInterval(loadListings, 30000);
+  </script>
 </body>
 </html>
