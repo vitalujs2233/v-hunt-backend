@@ -2,113 +2,107 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>V-HUNT</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>V-HUNT | Crypto Hunter</title>
+<script src="https://tailwindcss.com"></script>
+<script src="https://unpkg.com"></script>
 <style>
-body {
-margin: 0;
-font-family: Arial, sans-serif;
-background: #0b0f1a;
-color: white;
-}
-
-/* HEADER */
-.header {
-padding: 20px;
-font-size: 24px;
-font-weight: bold;
-}
-
-/* BANNER */
-.banner {
-margin: 15px;
-padding: 20px;
-border-radius: 16px;
-background: linear-gradient(135deg,#5f2cff,#00d4ff);
-font-size: 16px;
-}
-
-/* QUICK BUTTONS */
-.quick-buttons {
-display: flex;
-gap: 10px;
-padding: 10px;
-}
-
-.quick-buttons button {
-flex: 1;
-padding: 12px;
-border-radius: 10px;
-border: none;
-background: #1a2235;
-color: white;
-font-size: 14px;
-}
-
-/* SLIDER */
-.slider {
-display: flex;
-overflow-x: auto;
-padding: 15px;
-gap: 10px;
-}
-
-.card {
-min-width: 140px;
-padding: 20px;
-border-radius: 12px;
-background: #12192b;
-text-align: center;
-font-size: 16px;
-}
-
-/* BOTTOM NAV */
-.bottom-nav {
-position: fixed;
-bottom: 0;
-width: 100%;
-background: #0d1322;
-display: flex;
-justify-content: space-around;
-padding: 12px 0;
-border-top: 1px solid #1c253a;
-}
-
-.bottom-nav div {
-font-size: 18px;
-}
+@import url('https://googleapis.com');
+body { font-family: 'Inter', sans-serif; background-color: #050505; color: white; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+.glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+.hunt-gradient { background: linear-gradient(135deg, #00ff41 0%, #008f11 100%); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.active-tab { color: #00ff41; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 </style>
-
 </head>
+<body class="pb-24">
 
-<body>
-
-<div class="header">V-HUNT</div>
-
-<div class="banner">
-🚀 Охота за новыми листингами
+<!-- HEADER -->
+<header class="p-4 flex justify-between items-center sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-md">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 hunt-gradient rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(0,255,65,0.3)]">
+<i data-lucide="target" class="w-5 h-5 text-black"></i>
 </div>
-
-<div class="quick-buttons">
-<button>🔥 Горячие</button>
-<button>🆕 Новые</button>
-<button>📊 Тренд</button>
+<h1 class="text-xl font-extrabold tracking-tighter">V-HUNT <span class="text-[#00ff41]">$</span></h1>
 </div>
-
-<div class="slider">
-<div class="card">Bybit</div>
-<div class="card">OKX</div>
-<div class="card">Binance</div>
-<div class="card">KuCoin</div>
+<div id="api-status" class="flex items-center gap-2 px-3 py-1 glass rounded-full text-[10px] font-bold text-gray-400">
+<span class="status-dot bg-gray-500"></span> API CONNECTING
 </div>
+</header>
 
-<div class="bottom-nav">
-<div>🏠</div>
-<div>📋</div>
-<div>💰</div>
-<div>⚙️</div>
+<!-- HOT HUNTS -->
+<section class="px-4 mb-8 mt-4">
+<h2 class="text-xs uppercase text-gray-500 font-bold mb-3 tracking-widest">Горячие цели</h2>
+<div id="hot-hunts-container" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+<!-- Заглушка пока грузятся данные -->
+<div class="min-w-[280px] p-5 glass rounded-3xl animate-pulse">
+<div class="h-10 w-10 bg-white/10 rounded-full mb-4"></div>
+<div class="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
+<div class="h-8 bg-white/10 rounded-xl w-full"></div>
 </div>
+</div>
+</section>
 
+<!-- EXCHANGES GRID -->
+<section class="px-4 mb-8">
+<h2 class="text-xs uppercase text-gray-500 font-bold mb-3 tracking-widest">Биржи под прицелом</h2>
+<div class="grid grid-cols-2 gap-3">
+<div onclick="loadExchanges('binance')" class="p-4 glass rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform border-b-2 border-green-500/0 hover:border-green-500/50">
+<div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-yellow-500"><i data-lucide="layers"></i></div>
+<span class="font-bold text-sm">Binance</span>
+</div>
+<div onclick="loadExchanges('bybit')" class="p-4 glass rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform border-b-2 border-green-500/0 hover:border-green-500/50">
+<div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-orange-500"><i data-lucide="shield-check"></i></div>
+<span class="font-bold text-sm">ByBit</span>
+</div>
+</div>
+</section>
+
+<!-- BOTTOM NAV -->
+<nav class="fixed bottom-0 left-0 right-0 h-20 glass border-t border-white/5 px-6 flex justify-between items-center z-50">
+<div class="flex flex-col items-center gap-1 active-tab"><i data-lucide="radar" class="w-6 h-6"></i><span class="text-[10px] font-bold">HUNT</span></div>
+<div class="flex flex-col items-center gap-1 text-gray-500"><i data-lucide="bell" class="w-6 h-6"></i><span class="text-[10px] font-bold">ALERTS</span></div>
+<div class="flex flex-col items-center gap-1 text-gray-500"><i data-lucide="gem" class="w-6 h-6"></i><span class="text-[10px] font-bold">PREMIUM</span></div>
+</nav>
+
+<script>
+const API_URL = 'https://v-hunt-backend-production.up.railway.app';
+
+// 1. Проверка связи с бэкендом
+async function checkStatus() {
+const statusLabel = document.getElementById('api-status');
+try {
+const response = await fetch(`${API_URL}/status`); // замени на свой эндпоинт, если он другой
+if (response.ok) {
+statusLabel.innerHTML = '<span class="status-dot bg-green-500"></span> API ONLINE';
+statusLabel.classList.add('text-green-500');
+}
+} catch (e) {
+statusLabel.innerHTML = '<span class="status-dot bg-red-500"></span> API OFFLINE';
+statusLabel.classList.add('text-red-500');
+}
+}
+
+// 2. Функция получения листингов (пример)
+async function fetchListings() {
+try {
+const response = await fetch(`${API_URL}/listings`);
+const data = await response.json();
+renderListings(data);
+} catch (e) {
+console.error("Ошибка загрузки листингов", e);
+}
+}
+
+function renderListings(listings) {
+const container = document.getElementById('hot-hunts-container');
+// Здесь будет логика отрисовки карточек из данных твоего API
+}
+
+// Инициализация
+lucide.createIcons();
+checkStatus();
+</script>
 </body>
 </html>
