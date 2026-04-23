@@ -1,87 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<style>
-/* ПОЛНЫЙ ДИЗАЙН БЕЗ ВНЕШНИХ БИБЛИОТЕК */
-body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 0; }
-.app { padding: 20px; }
-
-/* Шапка */
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-.logo { font-size: 24px; font-weight: 900; letter-spacing: -1px; }
-.logo span { color: #00ff41; }
-
-/* Статус */
-.status { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; gap: 5px; }
-.dot { width: 6px; height: 6px; background: #555; border-radius: 50%; }
-.dot.online { background: #00ff41; box-shadow: 0 0 10px #00ff41; }
-
-/* Карточка цели */
-.card {
-background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-border: 1px solid #222;
-border-radius: 25px;
-padding: 25px;
-margin-bottom: 30px;
-position: relative;
-}
-.card-tag { position: absolute; top: 20px; right: 20px; background: rgba(0,255,65,0.1); color: #00ff41; padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: bold; }
-.coin-icon { width: 45px; height: 45px; background: #fff; color: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-bottom: 15px; }
-.coin-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-.coin-info { font-size: 12px; color: #666; margin-bottom: 20px; }
-.hunt-btn { background: #00ff41; color: #000; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 14px; cursor: pointer; }
-
-/* Сетка бирж */
-.grid { display: grid; grid-cols: 2; display: flex; gap: 15px; }
-.exchange { flex: 1; background: #111; border: 1px solid #222; padding: 20px; border-radius: 20px; text-align: center; }
-.exchange img { width: 30px; margin-bottom: 10px; opacity: 0.5; }
-.exchange-name { font-size: 12px; font-weight: bold; color: #888; }
-
-/* Нижнее меню */
-.nav { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(20,20,20,0.9); backdrop-filter: blur(10px); height: 70px; border-radius: 20px; display: flex; justify-content: space-around; align-items: center; border: 1px solid #333; }
-.nav-item { text-align: center; color: #555; font-size: 10px; font-weight: bold; }
-.nav-item.active { color: #00ff41; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>V-HUNT</title>
 </head>
-<body>
-<div class="app">
-<div class="header">
+<body style="background-color: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+
+<div style="padding: 25px;">
+<!-- HEADER -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px;">
 <div>
-<div class="logo">V-HUNT <span>$</span></div>
-<div class="status"><div class="dot online"></div> Satellite Linked</div>
+<div style="font-size: 26px; font-weight: 900; letter-spacing: -1.5px; font-style: italic;">V-HUNT <span style="color: #00ff41;">$</span></div>
+<div style="font-size: 9px; color: #00ff41; font-weight: bold; letter-spacing: 2px; margin-top: 5px; display: flex; align-items: center; gap: 6px;">
+<div style="width: 6px; height: 6px; background: #00ff41; border-radius: 50%; box-shadow: 0 0 10px #00ff41;"></div>
+RADAR ONLINE
 </div>
-<div style="width:40px; height:40px; background:#111; border-radius:50%; border:1px solid #222;"></div>
 </div>
-
-<div style="font-size: 10px; color: #444; font-weight: bold; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Приоритетные цели</div>
-
-<div class="card">
-<div class="card-tag">NEW LISTING</div>
-<div class="coin-icon">BNB</div>
-<div class="coin-name">BabyDoge / USDT</div>
-<div class="coin-info">Ожидание листинга: 02:14:55</div>
-<button class="hunt-btn" onclick="alert('Охота началась!')">ВЗЯТЬ В ПРИЦЕЛ</button>
+<div style="width: 44px; height: 44px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; display: flex; align-items: center; justify-content: center;">👤</div>
 </div>
 
-<div style="font-size: 10px; color: #444; font-weight: bold; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Радары бирж</div>
-<div class="grid">
-<div class="exchange" style="border-bottom: 2px solid #00ff41;">
-<div style="font-size: 20px; margin-bottom: 5px;">🔥</div>
-<div class="exchange-name">BYBIT</div>
+<!-- MAIN CARD -->
+<div style="background: linear-gradient(135deg, #111 0%, #050505 100%); border: 1px solid #222; border-radius: 30px; padding: 25px; margin-bottom: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative; overflow: hidden;">
+<div style="position: absolute; top: 0; right: 0; background: #00ff41; color: #000; font-size: 9px; font-weight: 900; padding: 5px 12px; border-bottom-left-radius: 15px; letter-spacing: 1px;">HOT TARGET</div>
+
+<div style="background: #fff; color: #000; width: 50px; height: 50px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; margin-bottom: 20px;">BNB</div>
+
+<div style="font-size: 22px; font-weight: 800; margin-bottom: 5px;">BabyDoge / USDT</div>
+<div style="font-size: 13px; color: #666; margin-bottom: 25px; font-weight: 500;">Binance • Listing Today 15:00</div>
+
+<button style="width: 100%; background: #00ff41; border: none; padding: 18px; border-radius: 18px; font-weight: 900; font-size: 14px; color: #000; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(0,255,65,0.2);">Взять в прицел</button>
 </div>
-<div class="exchange">
-<div style="font-size: 20px; margin-bottom: 5px;">💎</div>
-<div class="exchange-name">BINANCE</div>
+
+<!-- EXCHANGES GRID -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+<div style="background: #0a0a0a; border: 1px solid #1a1a1a; padding: 20px; border-radius: 24px; text-align: center; border-bottom: 3px solid #00ff41;">
+<div style="font-size: 24px; margin-bottom: 10px;">⚡️</div>
+<div style="font-size: 11px; font-weight: 900; color: #fff; letter-spacing: 1px;">BYBIT</div>
+</div>
+<div style="background: #0a0a0a; border: 1px solid #1a1a1a; padding: 20px; border-radius: 24px; text-align: center;">
+<div style="font-size: 24px; margin-bottom: 10px;">🔶</div>
+<div style="font-size: 11px; font-weight: 900; color: #fff; letter-spacing: 1px;">BINANCE</div>
 </div>
 </div>
 </div>
 
-<div class="nav">
-<div class="nav-item active">HUNT</div>
-<div class="nav-item">FEED</div>
-<div class="nav-item">PRO</div>
+<!-- BOTTOM NAV -->
+<div style="position: fixed; bottom: 25px; left: 20px; right: 20px; height: 75px; background: rgba(15,15,15,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); border-radius: 25px; display: flex; justify-content: space-around; align-items: center; z-index: 1000;">
+<div style="text-align: center; color: #00ff41; font-size: 9px; font-weight: 900;">
+<div style="font-size: 20px; margin-bottom: 2px;">🎯</div>
+HUNT
 </div>
+<div style="text-align: center; color: #444; font-size: 9px; font-weight: 900;">
+<div style="font-size: 20px; margin-bottom: 2px;">📡</div>
+FEED
+</div>
+<div style="text-align: center; color: #444; font-size: 9px; font-weight: 900;">
+<div style="font-size: 20px; margin-bottom: 2px;">💎</div>
+PRO
+</div>
+</div>
+
 </body>
 </html>
