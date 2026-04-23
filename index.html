@@ -1,160 +1,185 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>V-HUNT</title>
-
-<style>
-body {
-margin: 0;
-font-family: Arial;
-background: #0b0f1a;
-color: white;
-}
-
-.header {
-padding: 20px;
-font-size: 24px;
-font-weight: bold;
-}
-
-.sub {
-padding: 0 20px;
-opacity: 0.6;
-}
-
-.slider {
-display: flex;
-overflow-x: auto;
-gap: 12px;
-padding: 20px;
-}
-
-.card {
-min-width: 120px;
-background: #121a2a;
-padding: 15px;
-border-radius: 14px;
-text-align: center;
-cursor: pointer;
-}
-
-.card img {
-width: 40px;
-height: 40px;
-margin-bottom: 5px;
-}
-
-.screen {
-display: none;
-padding: 20px;
-}
-
-.active {
-display: block;
-}
-
-.listing {
-background: #121a2a;
-padding: 15px;
-margin-top: 10px;
-border-radius: 12px;
-}
-
-.back {
-margin-bottom: 10px;
-cursor: pointer;
-opacity: 0.7;
-}
-</style>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>V-HUNT</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body{margin:0;font-family:Arial,sans-serif;background:#08101b;color:#fff}
+    .wrap{padding:16px 16px 100px}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .title{font-size:34px;font-weight:900}
+    .sub{color:#9aa4b2;margin-top:4px}
+    .ticker{overflow:hidden;white-space:nowrap;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 0;margin:14px 0}
+    .ticker span{display:inline-block;padding-left:100%;animation:t 16s linear infinite}
+    @keyframes t{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+    .hero{background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px;margin-bottom:16px}
+    .hero .mark{display:inline-block;padding:6px 10px;border-radius:999px;background:#16304f;color:#8fd1ff;font-size:12px;font-weight:700}
+    .hero h2{margin:14px 0 8px;font-size:26px;line-height:1.1}
+    .hero p{margin:0;color:#aab4c3;line-height:1.45}
+    .section-title{font-size:22px;font-weight:900;margin:18px 0 10px}
+    .slider{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px}
+    .slider::-webkit-scrollbar{display:none}
+    .exchange{min-width:150px;background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:16px;cursor:pointer}
+    .icon{width:52px;height:52px;border-radius:16px;background:#16304f;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;margin-bottom:10px}
+    .exchange-name{font-size:20px;font-weight:900}
+    .exchange-sub{font-size:12px;color:#aab4c3;margin-top:4px}
+    .feed{background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;margin-bottom:10px}
+    .screen{display:none}
+    .screen.active{display:block}
+    .back{display:inline-block;background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;margin-bottom:12px;cursor:pointer}
+    .ex-head{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+    .big-icon{width:62px;height:62px;border-radius:18px;background:#16304f;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900}
+    .indicators{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+    .box{background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:12px}
+    .label{font-size:11px;color:#93a0b1;text-transform:uppercase;margin-bottom:6px}
+    .value{font-size:18px;font-weight:900}
+    .listing{background:#101826;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;margin-bottom:12px}
+    .listing h3{margin:0 0 8px;font-size:18px;line-height:1.25}
+    .muted{color:#9aa4b2;font-size:13px}
+    .row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+    .btn{display:block;text-align:center;background:#1b4f7f;color:#fff;text-decoration:none;padding:12px;border-radius:14px;margin-top:12px;font-weight:800}
+    .tabs{position:fixed;left:12px;right:12px;bottom:12px;background:#0d1522;border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .tab{padding:12px 8px;text-align:center;border-radius:16px;color:#9aa4b2}
+    .tab.active{background:#101826;color:#42b4ff}
+  </style>
 </head>
 <body>
+<div class="wrap">
+  <div id="homeScreen" class="screen active">
+    <div class="top">
+      <div>
+        <div class="title">V-HUNT</div>
+        <div class="sub">UI V4 EXCHANGE SLIDER</div>
+      </div>
+      <div>👤 Trader</div>
+    </div>
 
-<!-- ГЛАВНЫЙ ЭКРАН -->
-<div id="main" class="active">
+    <div class="ticker"><span>НОВЫЕ ЛИСТИНГИ • СКАНЕР БИРЖ • V-HUNT • ГЛАВНЫЙ ЭКРАН • НОВЫЕ ЛИСТИНГИ • СКАНЕР БИРЖ •</span></div>
 
-<div class="header">V-HUNT</div>
-<div class="sub">Листинг сканер криптобирж</div>
+    <div class="hero">
+      <div class="mark">НОВАЯ ВЕРСИЯ V4</div>
+      <h2>Главный экран V-HUNT</h2>
+      <p>Выбери биржу в свайпере ниже. После нажатия откроется отдельный экран с логотипом, индикаторами и списком листингов выбранной биржи.</p>
+    </div>
 
-<div class="slider">
-<div class="card" onclick="openExchange('bybit')">
-<img src="https://cryptologos.cc/logos/bybit-logo.png">
-<div>Bybit</div>
+    <div class="section-title">Биржи</div>
+    <div id="exchangeSlider" class="slider"></div>
+
+    <div class="section-title">Лента событий</div>
+    <div class="feed">V-HUNT показывает новые листинги по биржам на отдельных экранах.</div>
+    <div class="feed">Главный экран — это лицо проекта. Здесь только выбор биржи и лента событий.</div>
+  </div>
+
+  <div id="exchangeScreen" class="screen">
+    <div class="back" onclick="showHome()">← Назад</div>
+    <div class="ex-head">
+      <div id="bigIcon" class="big-icon">B</div>
+      <div>
+        <div id="exTitle" class="title" style="font-size:28px">BYBIT</div>
+        <div class="sub">Экран листингов биржи</div>
+      </div>
+    </div>
+
+    <div class="indicators">
+      <div class="box"><div class="label">Биржа</div><div id="indExchange" class="value">—</div></div>
+      <div class="box"><div class="label">Листинги</div><div id="indCount" class="value">0</div></div>
+      <div class="box"><div class="label">Статус</div><div class="value">LIVE</div></div>
+    </div>
+
+    <div id="listingsRoot"></div>
+  </div>
 </div>
 
-<div class="card" onclick="openExchange('okx')">
-<img src="https://cryptologos.cc/logos/okx-logo.png">
-<div>OKX</div>
-</div>
-</div>
-
-</div>
-
-<!-- ЭКРАН БИРЖИ -->
-<div id="exchangeScreen" class="screen">
-
-<div class="back" onclick="back()">← Назад</div>
-
-<h2 id="exchangeTitle"></h2>
-
-<div id="listings"></div>
-
+<div class="tabs">
+  <div class="tab active">Главная</div>
+  <div class="tab">Сеть</div>
+  <div class="tab">Wallet</div>
+  <div class="tab">Настройки</div>
 </div>
 
 <script>
-
 const API = "https://v-hunt-backend-production.up.railway.app/api/listings/live";
+let allListings = [];
 
-function openExchange(exchange) {
-document.getElementById("main").classList.remove("active");
-document.getElementById("exchangeScreen").classList.add("active");
-
-document.getElementById("exchangeTitle").innerText = exchange.toUpperCase();
-
-loadListings(exchange);
+function iconFor(exchange){
+  const ex = String(exchange || "").toUpperCase();
+  if(ex === "BYBIT") return "B";
+  if(ex === "OKX") return "O";
+  if(ex === "BINANCE") return "BN";
+  return "EX";
 }
 
-function back() {
-document.getElementById("main").classList.add("active");
-document.getElementById("exchangeScreen").classList.remove("active");
+function showHome(){
+  document.getElementById("exchangeScreen").classList.remove("active");
+  document.getElementById("homeScreen").classList.add("active");
 }
 
-async function loadListings(exchange) {
-const container = document.getElementById("listings");
-container.innerHTML = "Загрузка...";
+function openExchange(exchange){
+  document.getElementById("homeScreen").classList.remove("active");
+  document.getElementById("exchangeScreen").classList.add("active");
+  document.getElementById("bigIcon").textContent = iconFor(exchange);
+  document.getElementById("exTitle").textContent = exchange;
+  document.getElementById("indExchange").textContent = exchange;
 
-try {
-const res = await fetch(API);
-const json = await res.json();
+  const list = allListings.filter(x => x.exchange === exchange);
+  document.getElementById("indCount").textContent = String(list.length);
 
-const filtered = json.data.filter(i =>
-i.exchange.toLowerCase().includes(exchange)
-);
+  const root = document.getElementById("listingsRoot");
+  if (!list.length){
+    root.innerHTML = '<div class="listing"><div class="muted">По этой бирже пока нет листингов.</div></div>';
+    return;
+  }
 
-container.innerHTML = "";
-
-if (filtered.length === 0) {
-container.innerHTML = "Нет данных";
-return;
+  root.innerHTML = list.map(item => {
+    const dateText = item.publishedAt ? new Date(Number(item.publishedAt)).toLocaleString() : "—";
+    const symbol = item.symbol || "NEW";
+    const pair = item.pair || "—";
+    return `
+      <div class="listing">
+        <h3>${item.title || "New listing"}</h3>
+        <div class="muted">${item.description || "Официальное объявление биржи"}</div>
+        <div class="row">
+          <div class="box"><div class="label">Символ</div><div class="value">${symbol}</div></div>
+          <div class="box"><div class="label">Пара</div><div class="value">${pair}</div></div>
+          <div class="box"><div class="label">Дата</div><div class="value" style="font-size:14px">${dateText}</div></div>
+        </div>
+        <a class="btn" href="${item.url || "#"}" target="_blank" rel="noopener noreferrer">Открыть announcement</a>
+      </div>
+    `;
+  }).join("");
 }
 
-filtered.forEach(item => {
-container.innerHTML += `
-<div class="listing">
-<b>${item.title}</b><br/>
-${new Date(item.publishedAt).toLocaleString()}
-</div>
-`;
-});
+async function load(){
+  const slider = document.getElementById("exchangeSlider");
+  slider.innerHTML = '<div class="exchange"><div class="icon">...</div><div class="exchange-name">Загрузка</div><div class="exchange-sub">Подключаем биржи</div></div>';
 
-} catch (e) {
-container.innerHTML = "Ошибка загрузки";
-}
+  try{
+    const res = await fetch(API + "?t=" + Date.now());
+    const json = await res.json();
+    allListings = Array.isArray(json.data) ? json.data : [];
+    const exchanges = [...new Set(allListings.map(x => x.exchange).filter(Boolean))];
+
+    if(!exchanges.length){
+      slider.innerHTML = '<div class="exchange"><div class="icon">!</div><div class="exchange-name">Нет данных</div><div class="exchange-sub">Биржи не пришли с backend</div></div>';
+      return;
+    }
+
+    slider.innerHTML = exchanges.map(exchange => `
+      <div class="exchange" onclick="openExchange('${exchange.replace(/'/g, "\'")}')">
+        <div class="icon">${iconFor(exchange)}</div>
+        <div class="exchange-name">${exchange}</div>
+        <div class="exchange-sub">Открыть экран биржи</div>
+      </div>
+    `).join("");
+  }catch(e){
+    slider.innerHTML = '<div class="exchange"><div class="icon">!</div><div class="exchange-name">Ошибка</div><div class="exchange-sub">Не удалось загрузить биржи</div></div>';
+  }
 }
 
+load();
+setInterval(load, 30000);
 </script>
-
 </body>
 </html>
