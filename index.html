@@ -1,135 +1,87 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>V-HUNT | Crypto Hunter</title>
-<script src="https://tailwindcss.com"></script>
-<script src="https://unpkg.com"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-:root { --accent: #00ff41; --bg: #050505; }
-body { background-color: var(--bg); color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-.glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; }
-.tab-active { color: var(--accent); filter: drop-shadow(0 0 8px rgba(0, 255, 65, 0.4)); }
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.pulse { animation: pulse-animation 2s infinite; }
-@keyframes pulse-animation { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; shadow: 0 0 10px currentColor; }
+/* ПОЛНЫЙ ДИЗАЙН БЕЗ ВНЕШНИХ БИБЛИОТЕК */
+body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 0; }
+.app { padding: 20px; }
+
+/* Шапка */
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.logo { font-size: 24px; font-weight: 900; letter-spacing: -1px; }
+.logo span { color: #00ff41; }
+
+/* Статус */
+.status { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; display: flex; align-items: center; gap: 5px; }
+.dot { width: 6px; height: 6px; background: #555; border-radius: 50%; }
+.dot.online { background: #00ff41; box-shadow: 0 0 10px #00ff41; }
+
+/* Карточка цели */
+.card {
+background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+border: 1px solid #222;
+border-radius: 25px;
+padding: 25px;
+margin-bottom: 30px;
+position: relative;
+}
+.card-tag { position: absolute; top: 20px; right: 20px; background: rgba(0,255,65,0.1); color: #00ff41; padding: 4px 8px; border-radius: 8px; font-size: 10px; font-weight: bold; }
+.coin-icon { width: 45px; height: 45px; background: #fff; color: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-bottom: 15px; }
+.coin-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+.coin-info { font-size: 12px; color: #666; margin-bottom: 20px; }
+.hunt-btn { background: #00ff41; color: #000; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 14px; cursor: pointer; }
+
+/* Сетка бирж */
+.grid { display: grid; grid-cols: 2; display: flex; gap: 15px; }
+.exchange { flex: 1; background: #111; border: 1px solid #222; padding: 20px; border-radius: 20px; text-align: center; }
+.exchange img { width: 30px; margin-bottom: 10px; opacity: 0.5; }
+.exchange-name { font-size: 12px; font-weight: bold; color: #888; }
+
+/* Нижнее меню */
+.nav { position: fixed; bottom: 20px; left: 20px; right: 20px; background: rgba(20,20,20,0.9); backdrop-filter: blur(10px); height: 70px; border-radius: 20px; display: flex; justify-content: space-around; align-items: center; border: 1px solid #333; }
+.nav-item { text-align: center; color: #555; font-size: 10px; font-weight: bold; }
+.nav-item.active { color: #00ff41; }
 </style>
 </head>
-<body class="pb-32">
-
-<!-- HEADER -->
-<header class="p-6 flex justify-between items-center sticky top-0 bg-[#050505]/80 backdrop-blur-lg z-50">
+<body>
+<div class="app">
+<div class="header">
 <div>
-<h1 class="text-2xl font-black italic tracking-tighter uppercase">V-HUNT <span class="text-[#00ff41]">$</span></h1>
-<div id="api-status" class="flex items-center gap-2 mt-1 transition-all duration-500">
-<div class="status-dot bg-gray-500 shadow-[0_0_5px_gray]"></div>
-<span class="text-[9px] font-bold uppercase tracking-widest text-gray-500">Checking Satellite...</span>
+<div class="logo">V-HUNT <span>$</span></div>
+<div class="status"><div class="dot online"></div> Satellite Linked</div>
 </div>
+<div style="width:40px; height:40px; background:#111; border-radius:50%; border:1px solid #222;"></div>
 </div>
-<div class="w-10 h-10 glass flex items-center justify-center active:scale-90 transition-transform">
-<i data-lucide="user" class="w-5 h-5 text-gray-300"></i>
-</div>
-</header>
 
-<!-- MAIN TARGET (DASHBOARD) -->
-<main class="px-5 space-y-8">
+<div style="font-size: 10px; color: #444; font-weight: bold; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Приоритетные цели</div>
 
-<!-- HOT LISTING SLIDER -->
-<section>
-<h2 class="text-[10px] font-bold text-gray-500 uppercase tracking-[3px] mb-4 ml-1 text-center">Приоритетные цели</h2>
-<div id="listings-container" class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-<!-- Скелет загрузки -->
-<div class="min-w-[85%] p-6 glass pulse">
-<div class="w-12 h-12 bg-white/10 rounded-xl mb-4"></div>
-<div class="h-6 bg-white/10 rounded w-3/4 mb-2"></div>
-<div class="h-4 bg-white/10 rounded w-1/2"></div>
+<div class="card">
+<div class="card-tag">NEW LISTING</div>
+<div class="coin-icon">BNB</div>
+<div class="coin-name">BabyDoge / USDT</div>
+<div class="coin-info">Ожидание листинга: 02:14:55</div>
+<button class="hunt-btn" onclick="alert('Охота началась!')">ВЗЯТЬ В ПРИЦЕЛ</button>
+</div>
+
+<div style="font-size: 10px; color: #444; font-weight: bold; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;">Радары бирж</div>
+<div class="grid">
+<div class="exchange" style="border-bottom: 2px solid #00ff41;">
+<div style="font-size: 20px; margin-bottom: 5px;">🔥</div>
+<div class="exchange-name">BYBIT</div>
+</div>
+<div class="exchange">
+<div style="font-size: 20px; margin-bottom: 5px;">💎</div>
+<div class="exchange-name">BINANCE</div>
 </div>
 </div>
-</section>
-
-<!-- EXCHANGES GRID -->
-<section>
-<h2 class="text-[10px] font-bold text-gray-500 uppercase tracking-[3px] mb-4 ml-1">Радары бирж</h2>
-<div class="grid grid-cols-2 gap-4">
-<div class="p-5 glass flex flex-col items-center gap-3 active:scale-95 transition-all border-b-2 border-transparent hover:border-yellow-500">
-<i data-lucide="component" class="text-yellow-500 w-8 h-8"></i>
-<span class="text-xs font-black uppercase">Binance</span>
 </div>
-<div class="p-5 glass flex flex-col items-center gap-3 active:scale-95 transition-all border-b-2 border-[#00ff41]">
-<i data-lucide="zap" class="text-[#00ff41] w-8 h-8"></i>
-<span class="text-xs font-black uppercase">ByBit</span>
+
+<div class="nav">
+<div class="nav-item active">HUNT</div>
+<div class="nav-item">FEED</div>
+<div class="nav-item">PRO</div>
 </div>
-</div>
-</section>
-
-</main>
-
-<!-- BOTTOM NAV BAR -->
-<nav class="fixed bottom-6 left-5 right-5 h-20 glass flex justify-around items-center px-4 z-50">
-<div class="flex flex-col items-center gap-1 tab-active">
-<i data-lucide="target" class="w-6 h-6"></i>
-<span class="text-[9px] font-black uppercase tracking-widest">Hunt</span>
-</div>
-<div class="flex flex-col items-center gap-1 text-gray-500">
-<i data-lucide="radar" class="w-6 h-6"></i>
-<span class="text-[9px] font-black uppercase tracking-widest">Feed</span>
-</div>
-<div class="flex flex-col items-center gap-1 text-gray-500">
-<i data-lucide="shield-check" class="w-6 h-6"></i>
-<span class="text-[9px] font-black uppercase tracking-widest">Pro</span>
-</div>
-</nav>
-
-<!-- SCRIPTS -->
-<script src="servis.js"></script>
-<script>
-// Инициализация иконок
-lucide.createIcons();
-
-// Логика отображения
-async function startApp() {
-const statusIndicator = document.getElementById('api-status');
-const container = document.getElementById('listings-container');
-
-// 1. Проверяем связь
-const isOnline = await vHuntService.checkStatus();
-
-if (isOnline) {
-statusIndicator.innerHTML = `
-<div class="status-dot bg-[#00ff41] shadow-[0_0_8px_#00ff41]"></div>
-<span class="text-[9px] font-bold uppercase tracking-widest text-[#00ff41]">Satellite Linked</span>
-`;
-
-// 2. Грузим данные
-const data = await vHuntService.getListings();
-if (data && data.length > 0) {
-container.innerHTML = data.map(item => `
-<div class="min-w-[85%] p-6 glass bg-gradient-to-br from-white/5 to-transparent border-white/10">
-<div class="flex justify-between items-start mb-6">
-<div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black font-black text-xs shadow-xl">${item.symbol || 'COIN'}</div>
-<div class="bg-[#00ff41]/20 text-[#00ff41] text-[9px] px-2 py-1 rounded-md font-black tracking-tighter underline italic uppercase">${item.exchange || 'LIVE'}</div>
-</div>
-<div class="text-xl font-black mb-1 tracking-tight">${item.pair || 'Hunting...'}</div>
-<div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-4">Листинг подтвержден</div>
-<button class="w-full py-4 bg-[#00ff41] text-black font-black rounded-2xl text-xs uppercase shadow-[0_10px_20px_rgba(0,255,65,0.2)] active:scale-95 transition-all">Снайпить профит</button>
-</div>
-`).join('');
-} else {
-container.innerHTML = '<div class="p-6 text-gray-500 text-xs italic text-center w-full uppercase tracking-widest font-bold">Целей пока нет... Ждем анонсов</div>';
-}
-
-} else {
-statusIndicator.innerHTML = `
-<div class="status-dot bg-red-500 shadow-[0_0_8px_red]"></div>
-<span class="text-[9px] font-bold uppercase tracking-widest text-red-500">Connection Lost</span>
-`;
-container.innerHTML = '<div class="p-6 text-red-900/50 text-xs text-center w-full uppercase font-black">Ошибка связи с радаром</div>';
-}
-}
-
-startApp();
-</script>
 </body>
 </html>
