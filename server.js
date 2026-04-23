@@ -12,37 +12,36 @@ app.use(express.static(__dirname));
 const PORT = process.env.PORT || 8080;
 
 app.get("/", (_req, res) => {
-res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.get("/api/check", (_req, res) => {
-res.json({
-ok: true,
-message: "V-HUNT backend работает",
-version: "NEW_UI_V2",
-time: new Date().toISOString()
-});
+  res.json({
+    ok: true,
+    message: "V-HUNT backend работает",
+    source: "LISTING_SCANNER",
+    version: "NEW_EXCHANGE_UI_V1",
+    time: new Date().toISOString()
+  });
 });
 
 app.get("/api/listings/live", async (_req, res) => {
-try {
-const result = await getListings();
-
-res.json({
-ok: true,
-data: result.data || result,
-ui: "EXCHANGE_MODE"
-});
-
-} catch (error) {
-res.status(500).json({
-ok: false,
-error: error.message || "listing scanner failed",
-data: []
-});
-}
+  try {
+    const result = await getListings();
+    res.json({
+      ...result,
+      uiVersion: "NEW_EXCHANGE_UI_V1"
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message || "listing scanner failed",
+      data: [],
+      uiVersion: "NEW_EXCHANGE_UI_V1"
+    });
+  }
 });
 
 app.listen(PORT, () => {
-console.log("V-HUNT started on port", PORT);
+  console.log("V-HUNT started on port", PORT);
 });
