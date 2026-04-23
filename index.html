@@ -1,367 +1,122 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>V-HUNT</title>
-  <meta name="theme-color" content="#0b0f17" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#0b0f17;
-      --panel:#111826;
-      --panel-2:#0f1522;
-      --line:rgba(255,255,255,.07);
-      --text:#f4f7fb;
-      --muted:#8a94a7;
-      --accent:#3b82f6;
-      --accent-2:#22c55e;
-      --danger:#ef4444;
-      --radius:18px;
-      --shadow:0 12px 34px rgba(0,0,0,.26);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V-HUNT</title>
 
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0a0e16 0%,#0d1320 100%);color:var(--text);font-family:Inter,system-ui,sans-serif}
-    body{min-height:100vh}
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#0b0f14;
+color:#fff;
+}
 
-    .app{max-width:520px;margin:0 auto;padding:12px 12px 18px}
+.header{
+padding:15px;
+font-weight:900;
+font-size:20px;
+}
 
-    .top{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      margin-bottom:12px;
-    }
-    .brand{display:flex;align-items:center;gap:10px;min-width:0}
-    .logo{
-      width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;
-      background:linear-gradient(135deg,#1d4ed8,#22c55e);font-weight:800;font-size:15px;box-shadow:var(--shadow)
-    }
-    .brand h1{margin:0;font-size:15px;line-height:1.1}
-    .brand p{margin:3px 0 0;font-size:11px;color:var(--muted)}
-    .status{
-      padding:8px 10px;border-radius:12px;background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.18);
-      font-size:11px;font-weight:700;color:#bfdbfe;white-space:nowrap
-    }
+.exchanges{
+display:flex;
+overflow-x:auto;
+gap:10px;
+padding:10px;
+}
 
-    .hero{
-      background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02)),var(--panel);
-      border:1px solid var(--line);border-radius:22px;padding:14px;box-shadow:var(--shadow);margin-bottom:12px;
-    }
-    .hero-title{font-size:18px;font-weight:800;line-height:1.15;margin:0 0 6px}
-    .hero-sub{font-size:12px;color:var(--muted);line-height:1.45;margin:0}
+.exchange{
+min-width:120px;
+padding:15px;
+background:#111827;
+border-radius:12px;
+cursor:pointer;
+}
 
-    .chips-wrap{margin:12px -2px 2px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
-    .chips-wrap::-webkit-scrollbar{display:none}
-    .chips{display:flex;gap:8px;min-width:max-content}
-    .chip{
-      border:none;cursor:pointer;background:var(--panel-2);color:var(--text);border:1px solid var(--line);
-      border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:9px;min-width:110px;text-align:left
-    }
-    .chip.active{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.28);box-shadow:inset 0 0 0 1px rgba(59,130,246,.10)}
-    .chip-logo{
-      width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;
-      background:rgba(255,255,255,.06);font-size:13px;font-weight:800;flex-shrink:0
-    }
-    .chip-name{font-size:12px;font-weight:700;line-height:1}
-    .chip-meta{font-size:10px;color:var(--muted);margin-top:4px}
+.listings{
+padding:10px;
+}
 
-    .panel{
-      background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.02)),var(--panel);
-      border:1px solid var(--line);border-radius:22px;padding:12px;box-shadow:var(--shadow)
-    }
-    .exchange-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-    .exchange-main{display:flex;align-items:center;gap:10px;min-width:0}
-    .exchange-logo{
-      width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;
-      font-size:18px;font-weight:800;flex-shrink:0
-    }
-    .exchange-title{font-size:16px;font-weight:800;line-height:1.1}
-    .exchange-sub{font-size:11px;color:var(--muted);margin-top:4px}
-    .refresh-btn{
-      border:none;background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line);border-radius:12px;
-      padding:9px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0
-    }
+.card{
+background:#111827;
+padding:12px;
+margin-bottom:10px;
+border-radius:10px;
+}
 
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-    .stat{background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:10px}
-    .stat-label{font-size:10px;color:var(--muted);margin-bottom:5px}
-    .stat-value{font-size:15px;font-weight:800;line-height:1.1}
-
-    .section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-    .section-title{font-size:13px;font-weight:800}
-    .section-note{font-size:11px;color:var(--muted)}
-
-    .list{display:flex;flex-direction:column;gap:8px}
-    .card{
-      background:var(--panel-2);border:1px solid var(--line);border-radius:18px;padding:11px;
-    }
-    .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .pair{font-size:15px;font-weight:800;line-height:1.15}
-    .headline{font-size:11px;color:var(--muted);line-height:1.4;margin-top:4px}
-    .tag{padding:7px 9px;border-radius:12px;font-size:10px;font-weight:800;white-space:nowrap}
-    .tag.live{background:rgba(34,197,94,.12);color:#86efac;border:1px solid rgba(34,197,94,.18)}
-    .tag.new{background:rgba(59,130,246,.12);color:#bfdbfe;border:1px solid rgba(59,130,246,.18)}
-
-    .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-    .meta-item{
-      font-size:10px;color:var(--muted);padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--line)
-    }
-
-    .link-btn{
-      margin-top:10px;display:inline-flex;align-items:center;justify-content:center;width:100%;text-decoration:none;
-      border-radius:12px;padding:10px 12px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-size:12px;font-weight:800
-    }
-
-    .empty,.loading{
-      background:var(--panel-2);border:1px solid var(--line);border-radius:18px;padding:14px;text-align:center;font-size:12px;color:var(--muted)
-    }
-
-    .footer-note{margin-top:10px;font-size:11px;color:var(--muted);text-align:center}
-
-    @media (max-width:380px){
-      .stats{grid-template-columns:1fr}
-      .chip{min-width:98px;padding:9px 10px}
-      .hero-title{font-size:17px}
-    }
-  </style>
+button{
+background:#2563eb;
+border:none;
+padding:10px;
+color:#fff;
+border-radius:8px;
+cursor:pointer;
+}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <div class="top">
-      <div class="brand">
-        <div class="logo">V</div>
-        <div>
-          <h1>V-HUNT</h1>
-          <p>Listing Scanner</p>
-        </div>
-      </div>
-      <div class="status" id="appStatus">LIVE</div>
-    </div>
 
-    <div class="hero">
-      <div class="hero-title">Новые листинги в одном месте</div>
-      <p class="hero-sub">Выбери биржу и сразу смотри последние анонсы без лишних экранов и мусора.</p>
-      <div class="chips-wrap">
-        <div class="chips" id="exchangeChips"></div>
-      </div>
-    </div>
+<div class="header">V-HUNT</div>
 
-    <div class="panel">
-      <div class="exchange-head">
-        <div class="exchange-main">
-          <div class="exchange-logo" id="selectedLogo">B</div>
-          <div>
-            <div class="exchange-title" id="selectedName">Bybit</div>
-            <div class="exchange-sub" id="selectedSub">Live listings feed</div>
-          </div>
-        </div>
-        <button class="refresh-btn" onclick="loadListings()">Обновить</button>
-      </div>
+<div id="home">
+<div class="exchanges" id="exchangeList"></div>
+</div>
 
-      <div class="stats">
-        <div class="stat">
-          <div class="stat-label">Листинги</div>
-          <div class="stat-value" id="statCount">0</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Последний</div>
-          <div class="stat-value" id="statLatest">—</div>
-        </div>
-        <div class="stat">
-          <div class="stat-label">Обновлено</div>
-          <div class="stat-value" id="statUpdated">—</div>
-        </div>
-      </div>
+<div id="exchangeScreen" style="display:none">
+<button onclick="back()">← Назад</button>
+<h2 id="exchangeTitle"></h2>
+<div class="listings" id="listings"></div>
+</div>
 
-      <div class="section-head">
-        <div class="section-title">Новые листинги</div>
-        <div class="section-note" id="sectionNote">Bybit</div>
-      </div>
+<script>
+let allData = [];
 
-      <div class="list" id="listingsRoot">
-        <div class="loading">Загрузка листингов...</div>
-      </div>
-    </div>
+async function load(){
+const res = await fetch("/api/listings/live");
+const data = await res.json();
 
-    <div class="footer-note">Минимальный UI для Telegram mini app</div>
-  </div>
+allData = data.data || [];
 
-  <script>
-    const tg = window.Telegram?.WebApp;
-    const EXCHANGES = [
-      { id: 'bybit', name: 'Bybit', logo: 'B', note: 'Live now' },
-      { id: 'okx', name: 'OKX', logo: 'O', note: 'Soon' },
-      { id: 'binance', name: 'Binance', logo: 'BN', note: 'Soon' }
-    ];
+renderExchanges();
+}
 
-    let selectedExchange = 'bybit';
-    let listingsCache = [];
+function renderExchanges(){
+const exchanges = [...new Set(allData.map(x => x.exchange))];
+const root = document.getElementById("exchangeList");
 
-    function initTelegram(){
-      if (!tg) return;
-      tg.ready();
-      tg.expand();
-      tg.setHeaderColor('#0b0f17');
-      tg.setBackgroundColor('#0b0f17');
-    }
+root.innerHTML = exchanges.map(e => `
+<div class="exchange" onclick="openExchange('${e}')">
+${e}
+</div>
+`).join("");
+}
 
-    function formatTime(date){
-      return new Intl.DateTimeFormat('ru-RU', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    }
+function openExchange(name){
+document.getElementById("home").style.display = "none";
+document.getElementById("exchangeScreen").style.display = "block";
 
-    function formatDateTime(value){
-      if (!value) return '—';
-      const d = new Date(Number(value));
-      if (Number.isNaN(d.getTime())) return '—';
-      return new Intl.DateTimeFormat('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(d);
-    }
+document.getElementById("exchangeTitle").innerText = name;
 
-    function extractSymbol(item){
-      if (item.symbol) return String(item.symbol).toUpperCase();
-      const title = String(item.title || '');
-      const match = title.match(/([A-Z0-9]{2,})USDT/i);
-      return match ? match[1].toUpperCase() : 'NEW';
-    }
+const list = allData.filter(x => x.exchange === name);
 
-    function extractPair(item){
-      if (item.pair) return item.pair.toUpperCase();
-      const title = String(item.title || '');
-      const match = title.match(/([A-Z0-9]{2,}USDT)/i);
-      return match ? match[1].toUpperCase().replace('USDT', '/USDT') : 'New listing';
-    }
+document.getElementById("listings").innerHTML = list.map(x => `
+<div class="card">
+<b>${x.title || "Listing"}</b><br/>
+${x.description || ""}<br/><br/>
+<button onclick="window.open('${x.url}','_blank')">Open</button>
+</div>
+`).join("");
+}
 
-    function getExchangeFromItem(item){
-      return String(item.exchange || 'bybit').toLowerCase();
-    }
+function back(){
+document.getElementById("home").style.display = "block";
+document.getElementById("exchangeScreen").style.display = "none";
+}
 
-    function getStatusTag(item){
-      const title = String(item.title || '').toLowerCase();
-      const tags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : '';
-      if (title.includes('perpetual') || tags.includes('derivatives')) return { text: 'LIVE', cls: 'live' };
-      return { text: 'NEW', cls: 'new' };
-    }
+load();
+</script>
 
-    function renderExchangeChips(){
-      const root = document.getElementById('exchangeChips');
-      root.innerHTML = EXCHANGES.map(ex => `
-        <button class="chip ${selectedExchange === ex.id ? 'active' : ''}" onclick="selectExchange('${ex.id}')">
-          <div class="chip-logo">${ex.logo}</div>
-          <div>
-            <div class="chip-name">${ex.name}</div>
-            <div class="chip-meta">${ex.note}</div>
-          </div>
-        </button>
-      `).join('');
-    }
-
-    function selectExchange(id){
-      selectedExchange = id;
-      renderExchangeChips();
-      renderSelectedExchange();
-      if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
-    }
-
-    function renderSelectedExchange(){
-      const exchange = EXCHANGES.find(x => x.id === selectedExchange) || EXCHANGES[0];
-      document.getElementById('selectedLogo').textContent = exchange.logo;
-      document.getElementById('selectedName').textContent = exchange.name;
-      document.getElementById('selectedSub').textContent = selectedExchange === 'bybit' ? 'Live listings feed' : 'Источник будет подключён позже';
-      document.getElementById('sectionNote').textContent = exchange.name;
-
-      const filtered = listingsCache.filter(item => getExchangeFromItem(item) === selectedExchange);
-      renderStats(filtered);
-      renderList(filtered, exchange);
-    }
-
-    function renderStats(items){
-      document.getElementById('statCount').textContent = String(items.length);
-      document.getElementById('statLatest').textContent = items[0] ? extractSymbol(items[0]) : '—';
-      document.getElementById('statUpdated').textContent = formatTime(new Date());
-    }
-
-    function renderList(items, exchange){
-      const root = document.getElementById('listingsRoot');
-
-      if (selectedExchange !== 'bybit') {
-        root.innerHTML = `<div class="empty">${exchange.name} скоро подключим. Сейчас live-данные идут с Bybit.</div>`;
-        return;
-      }
-
-      if (!items.length) {
-        root.innerHTML = '<div class="empty">Пока нет новых листингов</div>';
-        return;
-      }
-
-      root.innerHTML = items.map(item => {
-        const status = getStatusTag(item);
-        const pair = extractPair(item);
-        const title = item.title || 'New listing';
-        const published = formatDateTime(item.publishedAt);
-        const url = item.url || '#';
-
-        return `
-          <div class="card">
-            <div class="card-top">
-              <div>
-                <div class="pair">${pair}</div>
-                <div class="headline">${title}</div>
-              </div>
-              <div class="tag ${status.cls}">${status.text}</div>
-            </div>
-            <div class="meta">
-              <div class="meta-item">${exchange.name}</div>
-              <div class="meta-item">${published}</div>
-            </div>
-            <a class="link-btn" href="${url}" target="_blank" rel="noopener noreferrer">Открыть announcement</a>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function loadListings(){
-      const root = document.getElementById('listingsRoot');
-      const status = document.getElementById('appStatus');
-      root.innerHTML = '<div class="loading">Загрузка листингов...</div>';
-      status.textContent = 'SYNC';
-
-      try {
-        const response = await fetch('/api/listings/live?t=' + Date.now(), {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
-        });
-
-        if (!response.ok) throw new Error('API ' + response.status);
-        const data = await response.json();
-        listingsCache = Array.isArray(data.data) ? data.data : [];
-        status.textContent = 'LIVE';
-        renderSelectedExchange();
-      } catch (e) {
-        listingsCache = [];
-        status.textContent = 'ERROR';
-        root.innerHTML = '<div class="empty">Не удалось загрузить листинги</div>';
-        renderStats([]);
-      }
-    }
-
-    initTelegram();
-    renderExchangeChips();
-    renderSelectedExchange();
-    loadListings();
-    setInterval(loadListings, 30000);
-  </script>
 </body>
 </html>
