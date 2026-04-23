@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const { getListings } = require("./listing_scanner");
 const { Address } = require("@ton/core");
 const { TonClient4 } = require("@ton/ton");
 const {
@@ -16,6 +17,25 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+// Проверка сервера
+app.get("/api/check", (_req, res) => {
+res.json({
+ok: true
+});
+});
+
+// Listings API (Bybit)
+app.get("/api/listings/live", async (_req, res) => {
+try {
+const result = await getListings();
+res.json(result);
+} catch (e) {
+res.json({
+ok: false,
+error: e.message
+});
+}
+});
 
 const PORT = process.env.PORT || 8080;
 const CACHE_TTL_MS = 15000;
